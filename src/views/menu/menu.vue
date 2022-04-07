@@ -152,7 +152,7 @@ export default {
 
 <style>
 .right_main_under{
- margin: 20px 0 0 20px;
- box-sizing: border-box;
+ /* margin: 20px 0 0 20px; */
+ /* box-sizing: border-box; */
 }
 </style>

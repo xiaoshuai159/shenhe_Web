@@ -362,8 +362,8 @@ export default {
 
 <style scoped lang='less'>
 .right_main_under{
- margin: 20px 0 0 20px;
- box-sizing: border-box;
+//  margin: 20px 0 0 20px;
+//  box-sizing: border-box;
 }
 .el-row {
   margin-bottom: 20px;

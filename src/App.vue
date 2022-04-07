@@ -87,13 +87,13 @@ export default {
 @import "./assets/css/color-dark.css";
 @import "./assets/css/public.css";
 /* 隐藏滚动条 */
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
   width: 0 !important;
 }
 ::-webkit-scrollbar {
   width: 0 !important;
   height: 0;
-}
+} */
 /* #app{
 overflow-y:scroll;
 overflow-x:hidden;

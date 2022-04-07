@@ -112,6 +112,14 @@ const routes = [
         },
         component: () => import("../views/menu/menu")
       },
+      {
+        path: '/treatment',
+        name: 'treatment',
+        meta: {
+          title: '流程管理页面'
+        },
+        component: () => import("../views/treatment/treatment")
+      },
     ],
     component: Home
   },

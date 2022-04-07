@@ -2,9 +2,12 @@
   width: 6.875rem /* 110/16 */;
 }
 .right_main_under {
-  width: 99%;
+  width: 98%;
   height: 97%;
   position: relative;
+  padding-left: 10px ;
+  padding-top: 10px;
+  box-sizing: border-box;
   /*统计的form*/
   /* form 表单项宽度*/
   /* form 表单项背景字体修改*/

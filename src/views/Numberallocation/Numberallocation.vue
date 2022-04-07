@@ -85,8 +85,8 @@ async tijiao(){
 
 <style scoped lang='less'>
 .right_main_under{
- margin: 20px 0 0 20px;
- box-sizing: border-box;
+//  margin: 20px 0 0 20px;
+//  box-sizing: border-box;
 }
 .zhong {
   width: 100%;
