@@ -143,7 +143,7 @@
 {{scope.row.domesticAndForeign==-1?'境外':'境内'}}
       </template>
       </el-table-column>
-      <el-table-column prop="rank" label="排名" show-overflow-tooltip>
+      <el-table-column prop="ranking" label="排名" show-overflow-tooltip>
           <template slot-scope="scope">
 {{scope.row.rank==-1?'无排名':scope.row.rank}}
       </template>
