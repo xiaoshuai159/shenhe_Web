@@ -27,12 +27,12 @@
       <!-- </el-row> -->
       <el-row :gutter="20">
         <el-col :span="16"
-          ><div class="grid-content bg-purple">
+          ><div class="grid-content1 bg-purple">
             <!-- 审核结果页面头部模块——类型 -->
             <!-- <el-form-item>
               <el-select
                 v-model="form.type"
-                placeholder="请选择类型"
+                placeholder="请选择"
                 clearable
                 @clear="type_clearFun(form.type)"
               >
@@ -83,15 +83,19 @@
             <!-- <el-form-item>
               <el-date-picker
                 v-model="form.datetime"
-                type="daterange"
-                :change="dataCreate_change(form.datetime)"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="结束日期"
-                value-format="yyyy-MM-dd HH:mm:ss"
-                :default-time="['00:00:00', '23:59:59']"
+            :clearable="false"
+            placeholder="选择日期"
+            type="date"
               >
               </el-date-picker>
+            </el-form-item>
+            <el-form-item>
+                      <el-button size="mini" type="primary" plain @click="chaxun"
+              >查询</el-button
+            >
+            <el-button size="mini" type="success" plain @click="chongzhi"
+              >重置</el-button
+            >
             </el-form-item> -->
             <!-- 审核结果页面头部模块——排名 -->
             <!-- <el-form-item>
@@ -139,7 +143,7 @@
                 placeholder="请选择特征"
                 clearable
                 @clear="tezheng_clearFun(form.tezheng)"
-              >
+              >222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222
                 <el-option
                   v-for="item in selectData.tezheng"
                   :key="item.value"
@@ -189,12 +193,7 @@
         <el-col :span="7"
           ><div class="grid-content bg-purple">
             <!-- 审核结果头部模块——button -->
-            <!-- <el-button size="mini" type="primary" plain @click="chaxun"
-              >查询</el-button
-            >
-            <el-button size="mini" type="success" plain @click="chongzhi"
-              >重置</el-button
-            > -->
+    
             <!-- 导出 -->
             <!-- <el-button
             class="daochu_weiyi"
@@ -358,6 +357,7 @@
 </template>
 
 <script>
+import dayjs from "dayjs";
 export default {
   data() {
     return {
@@ -385,7 +385,7 @@ export default {
         chushen: "",
         fushen: "",
         zhongshen: null,
-        datetime: null,
+        datetime:  dayjs(new Date()).format("YYYY-MM-DD"),
       },
 
       whiteSearchList: {
@@ -419,10 +419,7 @@ export default {
       totalPages: "",
       selectData: {
         type: [
-          // {
-          //   value: "是",
-          //   label: "是",
-          // },
+        
         ],
         laiyuan: [],
         paiming: [
@@ -499,9 +496,9 @@ export default {
       }
     },
     //查询
-    chaxun() {
-      this.reslist();
-    },
+    // chaxun() {
+    //   this.reslist();
+    // },
 
     //重置
     chongzhi() {
@@ -814,6 +811,11 @@ export default {
   border-radius: 4px;
   min-height: 36px;
   text-align: right;
+}
+.grid-content1 {
+  border-radius: 4px;
+  min-height: 36px;
+  text-align: left;
 }
 /deep/ .el-input--mini .el-input__inner {
   width: 210px;

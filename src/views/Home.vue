@@ -97,7 +97,7 @@ export default {
 <style>
   .content-box{
     background:#fff;
-    left: 12rem;
+    left: 8rem;
   }
   .content-collapse{
     background:#031123;

@@ -122,7 +122,7 @@ export default {
       const { data: res } = await this.$http.post("/menu/queryUserMenuList");
       // console.log(res);
       if (res.code == 200) {
-        console.log(res.data);
+        // console.log(res.data);
         this.items = res.data;
 
         // =========================
@@ -209,7 +209,7 @@ export default {
   width: 0;
 }
 .sidebar-el-menu:not(.el-menu--collapse) {
-  width: 12rem;
+  width: 8rem;
 }
 .sidebar > ul {
   height: 100%;

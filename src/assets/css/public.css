@@ -2,7 +2,7 @@
   width: 6.875rem /* 110/16 */;
 }
 .right_main_under {
-  width: 98%;
+  width: 99%;
   height: 97%;
   position: relative;
   padding-left: 10px ;
@@ -11,50 +11,6 @@
   /*统计的form*/
   /* form 表单项宽度*/
   /* form 表单项背景字体修改*/
-}
-.right_main_under .el-button--primary {
-  color: #ecf5ff;
-  background-color: #409eff80;
-  border-color: #1a5da0;
-}
-.right_main_under .el-button--success {
-  color: #ecf5ff;
-  background-color: #67c23a80;
-  border-color: #51753f7d;
-}
-.right_main_under .el-button--danger {
-  color: #ecf5ff;
-  background-color: #dd616180;
-  border-color: #734242;
-}
-.right_main_under .el-button--warning {
-  color: #ecf5ff;
-  background-color: #e6a23c80;
-  border-color: #775e387d;
-}
-.right_main_under .el-button--primary:focus,
-.right_main_under .el-button--primary:hover {
-  background-color: #409eff2e;
-  border-color: #205488;
-  color: #a6d0ff;
-}
-.right_main_under .el-button--success:focus,
-.right_main_under .el-button--success:hover {
-  color: #c6ecb2;
-  background-color: #67c23a59;
-  border-color: #4e98297d;
-}
-.right_main_under .el-button--danger:focus,
-.right_main_under .el-button--danger:hover {
-  color: #ecf5ff;
-  background-color: #dd61612e;
-  border-color: #734242;
-}
-.right_main_under .el-button--warning:focus,
-.right_main_under .el-button--warning:hover {
-  color: #ecf5ff;
-  background-color: #e6a23c2e;
-  border-color: #775e387d;
 }
 .right_main_under .static_form .el-date-editor .el-range-input,
 .right_main_under .static_form .el-date-editor .el-range-separator {
@@ -350,4 +306,8 @@
 }
 .right_main_under .upload_demo .el-upload-list__item .el-icon-close {
   top: 0;
+}
+.right_main_under .el-radio__inner {
+  width: 23px !important;
+  height: 23px !important;
 }

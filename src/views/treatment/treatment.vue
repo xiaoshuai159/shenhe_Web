@@ -6,11 +6,20 @@
           ><div class="grid-content bg-purple">
             <!-- 流程记录页面头部模块——域名 -->
             <el-form-item>
-              <el-input
+              <el-select
                 v-model="form.name"
-                clearable
                 placeholder="归属地"
-              ></el-input>
+                  clearable
+                @clear="fushencity_clearFun(form.name)"
+              >
+                <el-option
+                  v-for="(item, index) in selectDatacity.fushen"
+                  :label="item.label"
+                  :value="item.value"
+                  :key="index"
+                >
+                </el-option>
+              </el-select>
             </el-form-item>
             <!-- 涉诈类型 -->
             <el-form-item>
@@ -75,6 +84,9 @@
                 :default-time="['00:00:00', '23:59:59']"
               >
               </el-date-picker>
+            </el-form-item>
+            <el-form-item>
+              <el-input v-model="form.url" placeholder="请输入域名"></el-input>
             </el-form-item></div
         ></el-col>
         <el-col :span="8"
@@ -119,10 +131,10 @@
           ><span v-text="getIndex(scope.$index)"></span
         ></template>
       </el-table-column>
-       <el-table-column prop="createTime" label="处置时间" show-overflow-tooltip>
-         <template slot-scope="scope">
-           {{time(scope.row.createTime)}}
-         </template>
+      <el-table-column prop="createTime" label="处置时间" show-overflow-tooltip>
+        <template slot-scope="scope">
+          {{ time(scope.row.createTime) }}
+        </template>
       </el-table-column>
       <el-table-column prop="urlTitle" label="网址标题" show-overflow-tooltip>
       </el-table-column>
@@ -139,21 +151,17 @@
         label="境内外"
         show-overflow-tooltip
       >
-      <template slot-scope="scope">
-{{scope.row.domesticAndForeign==-1?'境外':'境内'}}
-      </template>
+        <template slot-scope="scope">
+          {{ scope.row.domesticAndForeign == -1 ? "境外" : "境内" }}
+        </template>
       </el-table-column>
       <el-table-column prop="ranking" label="排名" show-overflow-tooltip>
-          <template slot-scope="scope">
-{{scope.row.rank==-1?'无排名':scope.row.rank}}
-      </template>
+        <template slot-scope="scope">
+          {{ scope.row.rank == -1 ? "无排名" : scope.row.rank }}
+        </template>
       </el-table-column>
 
-      <el-table-column
-        prop="screenName"
-        label="截图名称"
-        show-overflow-tooltip
-      >
+      <el-table-column prop="screenName" label="截图名称" show-overflow-tooltip>
       </el-table-column>
       <el-table-column
         prop="yjcHttpType"
@@ -161,18 +169,12 @@
         show-overflow-tooltip
       >
       </el-table-column>
-      <el-table-column
-        prop="featureNum"
-        label="访问量"
-        show-overflow-tooltip
-      >
+      <el-table-column prop="featureNum" label="访问量" show-overflow-tooltip>
       </el-table-column>
       <el-table-column prop="belong" label="数据归属地" show-overflow-tooltip>
       </el-table-column>
       <el-table-column prop="fraudType" label="涉诈类型" show-overflow-tooltip>
       </el-table-column>
-
-     
 
       <!-- <el-table-column prop="url9" label="备注"> </el-table-column> -->
     </el-table>
@@ -235,6 +237,9 @@ import dayjs from "dayjs";
 export default {
   data() {
     return {
+      selectDatacity: {
+        fushen: [],
+      },
       shangchuan: false,
       whiteSearchList: {
         startCreateTime: null,
@@ -247,6 +252,7 @@ export default {
         zhongshen: null,
         dateValue_find: null,
         http: null,
+        url: null,
       },
       tableData: [
         // {
@@ -292,8 +298,7 @@ export default {
           { value: "szp_yx", label: "szp_yx" },
           {
             value: "ds_gw",
-            label:
-              "ds_gw",
+            label: "ds_gw",
           },
           { value: "ds_fw", label: "ds_fw" },
           { value: "ds_other", label: "ds_other" },
@@ -352,6 +357,7 @@ export default {
     };
   },
   created() {
+    this.suoshudi();
     this.techlist();
   },
   methods: {
@@ -367,15 +373,36 @@ export default {
         fraudType: this.form.chushen,
         belong: this.form.name,
         yjcHttpType: this.form.http,
+        url: this.form.url,
       };
       const { data: res } = await this.$http.post(
         "/treatment/batchFindTreatment",
         list
       );
       if (res.code == 200) {
-        console.log(res.data);
+        // console.log(res.data);
         this.tableData = res.data.list;
         this.total = res.data.total;
+      }
+    },
+    async suoshudi() {
+      const { data: res } = await this.$http.get("/check/sourcesGroup");
+      if (res.code == 200) {
+        // console.log(  res.data);
+        // this.selectDatacity.fushen = res.data;
+        // this.selectDatacity.fushen=
+        let reslist=[]
+        for (const key in res.data) {
+      reslist.push(res.data[key])
+        }
+            this.selectDatacity.fushen =reslist.map((item) => {
+          return {
+            value: item.mapName,
+            label: item.mapName,
+          };
+        });
+
+        // console.log(this.selectData.fushen);
       }
     },
 
@@ -392,6 +419,7 @@ export default {
       this.mypageable.pageNum = 1;
       this.mypageable.pageSize = 10;
       this.form.chushen = null;
+      this.form.url = null;
       this.form.name = "";
       this.techlist();
     },
@@ -491,6 +519,11 @@ export default {
         this.form.zhongshen = null;
       }
     },
+    fushencity_clearFun(val) {
+      if (val == "") {
+        this.form.name = null;
+      }
+    },
     handleSizeChange(val) {
       this.mypageable.pageSize = val;
       this.techlist();
@@ -551,7 +584,7 @@ export default {
   width: 210px;
 }
 /deep/ .el-form-item:first-child {
-  width: 300px;
+  // width: 300px;
   .el-form-item__content {
     width: 100%;
     .el-input__inner {

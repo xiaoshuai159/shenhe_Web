@@ -1,25 +1,40 @@
 <template>
   <div class="right_main_under">
-    <el-form size="mini" label-width="80px" class="form">
-      <el-form-item label="时间：" v-if="loadingxuanze">
-        <!-- //复审模块--时间 -->
-        <el-date-picker
-          v-model="newdomainSimpleVo.dateValue_find"
-          type="daterange"
-          :change="dataCreate_change(newdomainSimpleVo.dateValue_find)"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          value-format="yyyy-MM-dd HH:mm:ss"
-          :default-time="['00:00:00', '23:59:59']"
-        >
-        </el-date-picker>
-        <div class="btn">
-          <el-button size="mini" type="primary" plain>查询</el-button>
-          <el-button size="mini" type="success" plain>重置</el-button>
-        </div>
-      </el-form-item>
-      <div class="return" v-if="listloadingurl">
+    <div class="toptitle">
+      <el-form size="mini" class="form" :inline="true">
+        <el-form-item>
+          <!-- //复审模块--时间 -->
+          <el-date-picker
+            v-model="newdomainSimpleVo.dateValue_find"
+            :clearable="false"
+            placeholder="选择日期"
+            type="date"
+             class="timerq"
+          >
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item  >
+          <el-select
+          class="timerq"
+            v-model="newdomainSimpleVo.guishud"
+            placeholder="归属地"
+            @clear="fushen_clearFun(newdomainSimpleVo.guishud)"
+          >
+            <el-option
+              v-for="(item, index) in selectData.fushen"
+              :label="item.mapName"
+              :value="item.sources"
+              :key="index"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div class="btn">
+        <el-button size="mini" type="primary" plain @click="chaxun">查询</el-button>
+        <el-button size="mini" type="success" plain @click="chongzhi">重置</el-button>
+      </div>
+      <div class="return">
         <el-button
           class="btn1"
           size="mini"
@@ -27,14 +42,14 @@
           plain
           @click="fanhui"
         >
-          <i class="el-icon-back"></i> 返回上一层
+          <i class="el-icon-refresh"></i> 刷新
         </el-button>
       </div>
-    </el-form>
+    </div>
     <!-- //复审模块——日期列表 -->
     <div class="bottomlist">
       <div class="datalist">
-        <div v-if="listloading" class="leftlist">
+        <!-- <div v-if="listloading" class="leftlist">
           <el-table
             border
             ref="multipleTable"
@@ -75,7 +90,7 @@
             >
             </el-pagination>
           </div>
-        </div>
+        </div> -->
         <!-- 复审模块——详情url列表 -->
         <el-tabs
           v-model="activeName"
@@ -83,290 +98,159 @@
           v-if="listloadingurl"
         >
           <el-tab-pane label="待审核" name="0">
-            <!-- 初申模块——详情url列表 -->
+            <!--待审列表 -- 一页数据-->
             <div class="leftlist">
-              <el-table
-                border
-                ref="multipleTable"
-                :data="tableData1"
-                style="width: 100%"
-                max-height="650px"
-                size="mini"
-                class="tableStyle1"
-                empty-text="暂无数据"
+              <!-- 每个块 -->
+              <div
+                class="listurl"
+                v-for="(item, index) in tableDatalist"
+                :key="index"
               >
-                <el-table-column
-                  prop="ID"
-                  label="序号"
-                  type="index"
-                  min-width="5%"
-                >
-                  <template slot-scope="scope"
-                    ><span v-text="getIndex1(scope.$index)"></span
-                  ></template>
-                </el-table-column>
-                <el-table-column prop="url" label="URL" min-width="75%">
-                  <template slot-scope="scope">
-                    <a :href="scope.row.url" target="_blank" class="urlcolor">{{
-                      scope.row.url
-                    }}</a>
-                  </template>
-                </el-table-column>
-                <el-table-column label="操作" min-width="20%">
-                  <template slot-scope="scope">
-                    <el-button
-                      size="mini"
-                      type="text"
-                      @click="chakan(scope.row)"
-                      >查看</el-button
+                <!-- 文字input -->
+                <el-form size="mini" label-width="80px">
+                  <el-row>
+                    <el-col :span="24">
+                      <div class="grid-content bg-purple-dark">
+                        <el-form-item label="域名：" class="inner">
+                          <el-tooltip
+                            :disabled="disabledTooltip"
+                            effect="dark"
+                            :content="item.url"
+                            placement="top"
+                          >
+                            <!-- 加一个span防止input提示条不显示 -->
+                            <span>
+                              <el-input
+                                ref="url"
+                                type="textarea"
+                                v-model="item.url"
+                                disabled
+                                @mouseover.native="showTooltip"
+                              ></el-input>
+                            </span>
+                          </el-tooltip>
+                        </el-form-item>
+                      </div>
+                    </el-col>
+                    <el-col :span="24"
+                      ><div class="grid-content bg-purple-light">
+                        <el-form-item label="类型：" class="inner">
+                          <el-input v-model="item.fraudType" disabled>
+                          </el-input>
+                        </el-form-item></div
+                    ></el-col>
+                    <el-col :span="24"
+                      ><div class="grid-content bg-purple-light">
+                        <el-form-item label="访问量：" class="inner">
+                          <el-input v-model="item.visits" disabled> </el-input>
+                        </el-form-item></div
+                    ></el-col>
+                    <el-col :span="24">
+                      <div class="grid-content bg-purple-dark">
+                        <el-form-item label="初审时间：" class="inner">
+                          <el-input
+                            :value="time(item.startCheck1Time)"
+                            disabled
+                          ></el-input>
+                        </el-form-item>
+                      </div>
+                    </el-col>
+                    <el-col :span="24"
+                      ><div class="grid-content bg-purple-light">
+                        <el-form-item label="初审结果：" class="inner">
+                          <el-input
+                            :value="status(item.startCheck1Result)"
+                            disabled
+                          ></el-input>
+                        </el-form-item></div
+                    ></el-col>
+                  </el-row>
+                </el-form>
+                <!--复审模块- 图片 -->
+                <div class="images">
+                  <el-image
+                    :src="item.phonePicture"
+                    :preview-src-list="item.picArray"
+                    class="img1"
+                    title="移动端"
+                  >
+                    <div slot="error" class="image-slot">
+                      <i class="el-icon-picture-outline" style="margin: 40%"
+                        >无图片</i
+                      >
+                    </div>
+                  </el-image>
+                </div>
+                <!--复审模块- radio -->
+                <div class="botcheck">
+                  <el-radio-group v-model="formradio[index]">
+                    <el-radio
+                      class="mg_r_10"
+                      :label="1"
+                      @change="handleRadioChanges(item)"
+                      >是</el-radio
                     >
-                  </template>
-                </el-table-column>
-              </el-table>
-              <div class="bottom">
-                <el-pagination
-                  @current-change="handleCurrentChangeurl"
-                  :current-page="mypageableurl.pageNumurl"
-                  :page-size="mypageableurl.pageSizeurl"
-                  layout="total, prev, pager, next, jumper"
-                  :total="totalurl"
-                  class="pagePagination pageRight"
-                  small
-                >
-                </el-pagination>
-              </div></div
-          ></el-tab-pane>
-          <el-tab-pane label="已审核" name="1">
-            <!-- 初申模块——详情url列表 -->
-            <div class="leftlist">
-              <el-table
-                border
-                ref="multipleTable"
-                :data="tableData1wei"
-                style="width: 100%"
-                max-height="650px"
-                size="mini"
-                class="tableStyle1"
-                empty-text="暂无数据"
+                    <el-radio
+                      class="mg_r_10"
+                      :label="2"
+                      @change="handleRadioChanges(item)"
+                      >否</el-radio
+                    >
+                    <el-radio
+                      class="mg_r_10"
+                      :label="3"
+                      @change="handleRadioChanges(item)"
+                      >不确定</el-radio
+                    >
+                  </el-radio-group>
+                </div>
+              </div>
+            </div>
+            <!-- 页码 -->
+            <div class="bottom1">
+              <el-pagination
+                @current-change="handleCurrentChangeurl"
+                :current-page="mypageableurl.pageNumurl"
+                :page-size="mypageableurl.pageSizeurl"
+                layout="total, prev, pager, next, jumper"
+                :total="totalurl"
+                class="pagePagination pageRight"
+                small
               >
-                <el-table-column
-                  prop="ID"
-                  label="序号"
-                  type="index"
-                  min-width="5%"
-                >
-                  <template slot-scope="scope"
-                    ><span v-text="getIndex2(scope.$index)"></span
-                  ></template>
-                </el-table-column>
-                <el-table-column prop="url" label="URL" min-width="75%">
-                  <template slot-scope="scope">
-                    <a :href="scope.row.url" target="_blank" class="urlcolor">{{
-                      scope.row.url
-                    }}</a>
-                  </template>
-                </el-table-column>
-                <el-table-column label="操作" min-width="20%">
-                  <template slot-scope="scope">
-                    <el-button
-                      size="mini"
-                      type="text"
-                      @click="chakan1(scope.row)"
-                      >查看</el-button
-                    >
-                  </template>
-                </el-table-column>
-              </el-table>
-              <div class="bottom">
-                <el-pagination
-                  @current-change="handleCurrentChangeurl1"
-                  :current-page="mypageableurl1.pageNumurl1"
-                  :page-size="mypageableurl1.pageSizeurl1"
-                  layout="total, prev, pager, next, jumper"
-                  :total="totalurl1"
-                  class="pagePagination pageRight"
-                  small
-                >
-                </el-pagination>
-              </div></div
-          ></el-tab-pane>
+              </el-pagination>
+            </div>
+            <div class="optbtn">
+              <el-button @click="radioqx">全部是</el-button>
+              <el-button @click="radiofx">全部否</el-button>
+              <el-button @click="submit">提交</el-button>
+            </div>
+            <!-- 当前位置 -->
+            <!-- <div class="location">
+              <span
+                class="guishudi"
+                v-if="guishudiLoading"
+                :title="this.gushudi"
+                @click="qiehuanguishudi"
+              >
+                归属地:{{ this.gushudi }}
+              </span>
+              <span class="wenzi" v-if="wenzi123">
+                当前日期 <span class="te">{{ this.mapName }}</span
+                >待处置量为：<span class="te">{{ this.nums }}</span
+                >条
+              </span>
+            </div> -->
+          </el-tab-pane>
         </el-tabs>
-        <!-- //审核状态 -->
-        <div class="leftbtoom" v-if="listloadingright">
-          <h4>初审结果</h4>
-          <table border="1" width="90%">
-            <tr>
-              <th>初审时间</th>
-              <th>初审结果</th>
-            </tr>
-            <tr>
-              <td>{{ time(this.form.chutime) }}</td>
-              <td>{{ status(this.form.chuerr) }}</td>
-            </tr>
-          </table>
-        </div>
       </div>
-      <!--复审模块- 右url详情 -->
-      <div class="listurl" v-if="listloadingright">
-        <el-form size="mini" label-width="80px">
-          <el-row>
-            <el-col :span="24"
-              ><div class="grid-content bg-purple-dark">
-                <el-form-item label="域名：" class="inner">
-                  <el-input v-model="form.yuming" disabled></el-input>
-                </el-form-item></div
-            ></el-col>
-          </el-row>
-          <el-row>
-            <el-col :span="24"
-              ><div class="grid-content bg-purple-dark">
-                <el-form-item label="IP：" class="inner">
-                  <el-tooltip
-                    class="item"
-                    effect="dark"
-                    :content="form.ip"
-                    placement="bottom"
-                  >
-                    <el-input v-model="form.ip" disabled></el-input>
-                  </el-tooltip>
-                </el-form-item></div
-            ></el-col>
-          </el-row>
-          <el-row type="flex" class="row-bg" justify="space-between">
-            <el-col :span="6"
-              ><div class="grid-content bg-purple">
-                <el-form-item label="来源：">
-                  <el-input v-model="form.laiyuan" disabled></el-input>
-                </el-form-item></div
-            ></el-col>
-            <el-col :span="6"
-              ><div class="grid-content bg-purple-light">
-                <el-form-item label="标题：">
-                   <el-tooltip
-                    class="item"
-                    effect="dark"
-                    :content="form.title"
-                    placement="bottom"
-                  >
-                  <el-input v-model="form.title" disabled></el-input>
-                    </el-tooltip>
-                </el-form-item></div
-            ></el-col>
-            <el-col :span="6"
-              ><div class="grid-content bg-purple">
-                <el-form-item label="原因：">
-                  <el-input v-model="form.question" disabled></el-input>
-                </el-form-item></div
-            ></el-col>
-          </el-row>
-          <el-row type="flex" class="row-bg" justify="space-between">
-            <el-col :span="6"
-              ><div class="grid-content bg-purple">
-                <el-form-item label="特征：">
-                  <el-input v-model="form.tezheng" disabled></el-input>
-                </el-form-item></div
-            ></el-col>
-            <el-col :span="6"
-              ><div class="grid-content bg-purple-light">
-                <el-form-item label="类型：">
-                  <el-input v-model="form.type" disabled></el-input>
-                </el-form-item></div
-            ></el-col>
-            <el-col :span="6"
-              ><div class="grid-content bg-purple">
-                <el-form-item label="访问量：">
-                  <el-input v-model="form.fangwenliang" disabled></el-input>
-                </el-form-item></div
-            ></el-col>
-          </el-row>
-          <el-row type="flex" class="row-bg" justify="space-between">
-            <el-col :span="6"
-              ><div class="grid-content bg-purple-light">
-                <el-form-item label="排名：">
-                  <el-input v-model="form.paiming" disabled></el-input>
-                </el-form-item></div
-            ></el-col>
-            <el-col :span="6"
-              ><div class="grid-content bg-purple">
-                <el-form-item label="备案：">
-                  <el-tooltip
-                    class="item"
-                    effect="dark"
-                    :content="form.jingneiwai"
-                    placement="bottom"
-                  >
-                    <el-input v-model="form.jingneiwai" disabled></el-input>
-                  </el-tooltip>
-                </el-form-item></div
-            ></el-col>
-            <el-col :span="6"
-              ><div class="grid-content bg-purple"></div
-            ></el-col>
-          </el-row>
-        </el-form>
-        <!--复审模块- 右url图片 -->
-        <div class="images">
-          <el-image
-            :src="this.form.img"
-            :preview-src-list="this.form.srcList"
-            class="img"
-            title="pc"
-          >
-            <div slot="error" class="image-slot">
-              <i class="el-icon-picture-outline" style="margin: 40%">无图片</i>
-            </div>
-          </el-image>
-          <el-image
-            :src="this.form.img1"
-            :preview-src-list="this.form.srcList1"
-            class="img1"
-            title="移动端"
-          >
-            <div slot="error" class="image-slot">
-              <i class="el-icon-picture-outline" style="margin: 40%">无图片</i>
-            </div>
-          </el-image>
-          <!-- <img :src="this.form.img" alt="" class="img" title="pc" />
-          <img :src="this.form.img1" alt="" class="img1" title="移动端" /> -->
-        </div>
-        <!--复审模块- 右url——radio -->
-        <div class="botcheck">
-          <el-radio-group v-model="radio">
-            <el-radio :label="1">是</el-radio>
-            <el-radio :label="2">否</el-radio>
-            <el-radio :label="3">不确定</el-radio>
-            <el-button size="mini" @click="tijiao" v-show="radioloading"
-              >提交</el-button
-            >
-          </el-radio-group>
-        </div>
-        <!--复审模块- 右url——上一页下一页 -->
-        <div class="leftshang">
-          <i class="el-icon-arrow-left" @click="shangyiye" v-if="shangxian"></i>
-        </div>
-        <div class="leftxia">
-          <i class="el-icon-arrow-right" @click="xiayiye" v-if="xiaxian"></i>
-        </div>
-      </div>
-      <span
-        class="guishudi"
-        v-if="guishudiLoading"
-        :title="this.gushudi"
-        @click="qiehuanguishudi"
-      >
-        归属地:{{ this.gushudi }}
-      </span>
-      <span class="wenzi" v-if="wenzi123">
-        当前日期 <span class="te">{{ this.mapName }}</span >待处置量为：<span class="te">{{ this.nums }}</span>条
-      </span>
     </div>
-
-    <el-dialog
+    <!-- 选择归属地 -->
+    <!-- <el-dialog
       title="选择归属地"
       :visible.sync="dialogVisible"
       width="30%"
       :before-close="handleClose"
-        :showClose="false"
+      :showClose="false"
     >
       <el-radio-group v-model="radio123">
         <el-radio
@@ -380,6 +264,28 @@
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" plain @click="errer1">确 定</el-button>
       </span>
+    </el-dialog> -->
+    <!-- //提交前提示 -->
+    <el-dialog
+      title="提示"
+      :visible.sync="dialogtijiao"
+      width="30%"
+      :before-close="handleClose"
+      :showClose="false"
+    >
+      <div>
+        <p>
+          当前是：{{ this.yes }}条，当前否：{{ this.no }}条，当前不确定：{{
+            this.uncertain
+          }}条
+        </p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" plain @click="determine" :disabled="disab">确 定</el-button>
+        <el-button type="primary" plain @click="dialogtijiao = false"
+          >取 消</el-button
+        >
+      </span>
     </el-dialog>
   </div>
 </template>
@@ -389,19 +295,28 @@ import dayjs from "dayjs";
 import Numlist from "@/utils/page.js";
 import getIndexres from "@/utils/Indexxia.js";
 export default {
-  name: "chushen",
+  name: "fushen",
   data() {
     return {
+      disab:false,
+      selectData: {
+        fushen: [],
+      },
+      disabledTooltip: true,
+      tableDatalist: [],
       gushudi: "",
       guishudiLoading: false,
       nums: 0,
       mapName: "",
       wenzi123: false,
-      radioloading: false,
+      radio123: "",
+      dialogVisible: true,
       loadingxuanze: false,
+      radioloading: false,
       activeName: "0",
       newdomainSimpleVo: {
-        dateValue_find: null, //时间
+        dateValue_find: dayjs(new Date()).format("YYYY-MM-DD"), //时间
+        guishud: 8,
       },
       whiteSearchList: {
         startCreateTime: "",
@@ -411,29 +326,16 @@ export default {
         pageNum: 1,
         pageSize: 10,
       },
-      total: 1,
+      total: 0,
       totalPages: "",
       mypageableurl: {
         pageNumurl: 1,
         pageSizeurl: 10,
       },
-      totalurl: 1,
+      totalurl: 0,
       totalPagesurl: "",
-      mypageableurl1: {
-        pageNumurl1: 1,
-        pageSizeurl1: 10,
-      },
-      totalurl1: 1,
-      totalPagesurl1: "",
-      tableData: [
-    
-      ],
-      tableData1: [
-      
-      ],
-      tableData1wei: [
-     
-      ],
+      tableData: [],
+      tableData1wei: [],
       form: {
         yuming: "",
         laiyuan: "",
@@ -453,11 +355,10 @@ export default {
         chuname: "",
         chutime: "",
         chuerr: "",
+        id: "",
       },
-      radio: "",
-      listloading: true,
-      listloadingurl: false,
-      listloadingright: false,
+      listloading: false,
+      listloadingurl: true,
       searchurl: "",
       sId: "",
       sId1: "",
@@ -474,31 +375,68 @@ export default {
       shushoudione: [],
       suoshudiname: "",
       processid: "",
-      radio123: "",
-      dialogVisible: true,
+      // ————————————————————
+      // 按钮
+      formradio: [
+        { radioArray0: "" },
+        { radioArray1: "" },
+        { radioArray2: "" },
+        { radioArray3: "" },
+        { radioArray4: "" },
+        { radioArray5: "" },
+        { radioArray6: "" },
+        { radioArray7: "" },
+        { radioArray8: "" },
+        { radioArray9: "" },
+      ],
+      newsformradio: [], //新数组
+      dialogtijiao: false, //提示弹窗
+      yes: 0, //是
+      no: 0, //否
+      uncertain: 0, //不确定
+      tabs: [
+        {
+          name: "是",
+          id: 1,
+        },
+        {
+          name: "否",
+          id: 2,
+        },
+        {
+          name: "不确定",
+          id: 3,
+        },
+      ],
     };
   },
   created() {
-    this.listtime();
+    // this.listtime();
     this.suoshudi();
+    this.xq()
   },
   methods: {
-       qiehuanguishudi(){
-      this.dialogVisible=true
-      this.listloading = true;
-      this.listloadingurl = false;
-      this.wenzi123=false;
-      this.listloadingright = false;
+
+    //鼠标移上去时显示input的所有内容
+    showTooltip() {
+      this.disabledTooltip = false; //false：不管url的长度都显示
+      // const lifeW = this.$refs.url;
+      // this.disabledTooltip = lifeW[0].value.length < 10; //url长度大于10时才显示
     },
+    // qiehuanguishudi() {
+    //   this.dialogVisible = true;
+    //   this.listloading = true;
+    //   this.listloadingurl = false;
+    //   this.wenzi123 = false;
+    // },
     errer1() {
-           if(this.radio123==""){
-        this.$message('请选择归属地')
-      }else{
-          this.mypageableurl.pageNumurl =1;
-              this.mypageableurl1.pageNumurl1 =1;
-      this.dialogVisible = false;
-      this.gsd();
-      this.guishudiLoading = true;
+      if (this.radio123 == "") {
+        this.$message("请选择归属地");
+      } else {
+        this.mypageableurl.pageNumurl = 1;
+        this.dialogVisible = false;
+        this.gsd();
+        this.guishudiLoading = true;
       }
     },
     gsd() {
@@ -515,15 +453,15 @@ export default {
       const num = this.radio123;
       // console.log(num);
       const num1 = parseInt(num);
-
       const { data: res } = await this.$http.get("/check/checkNums", {
         params: {
-          sources: num1,checkTime:this.searchurl
+          sources: num1,
+          checkTime: this.searchurl,
         },
       });
       if (res.code == 200) {
         // console.log(res.data);
-             this.wenzi123 = true;
+        // this.wenzi123 = true;
         this.nums = res.data.nums;
         this.mapName = res.data.mapName;
       }
@@ -552,21 +490,140 @@ export default {
         this.total = res.data.total;
       }
     },
-
-    handleClick(tab, event) {
-      // console.log(tab, event);
-      if (tab.name == 1) {
-        // this.activeName=1
-        // console.log('已审核');
-        this.mypageableurl1.pageNumurl1 = 1;
-        this.xqyi();
-        this.listloadingright = false;
-      } else if (tab.name == 0) {
-        // console.log('待审核');
-        this.mypageableurl.pageNumurl = 1;
-        this.xq();
-        this.listloadingright = false;
+    // _________________________新的
+    // 全选
+    radioqx() {
+      for (var i = 0; i < this.formradio.length; i++) {
+        this.formradio[i] = 1;
       }
+      this.$forceUpdate();
+    },
+    //反选
+    radiofx() {
+      for (var i = 0; i < this.formradio.length; i++) {
+        this.formradio[i] = 2;
+      }
+      this.$forceUpdate();
+    },
+    //提交
+    submit() {
+     
+      for (var i = 0; i < this.formradio.length; i++) {
+       
+        this.newtableDatalist = this.tableDatalist.map((items, index) => {
+          return {
+            id: this.newnum[index],
+            url: items.url,
+            againCheckResult: this.formradio[index],
+          };
+        });
+      }
+      //console.log(this.newtableDatalist);
+      // 拿当前页面的是否不确定数量
+      let y = 0;
+      let n = 0;
+      let ny = 0;
+      for (var j = 0; j < this.newtableDatalist.length; j++) {
+        if (this.newtableDatalist[j].againCheckResult == 1) {
+          y++;
+        } else if (this.newtableDatalist[j].againCheckResult == 2) {
+          n++;
+        } else if (this.newtableDatalist[j].againCheckResult == 3) {
+          ny++;
+        }
+      }
+      this.yes = y;
+      this.no = n;
+      this.uncertain = ny;
+      this.dialogtijiao = true;
+    },
+    async suoshudi() {
+      const { data: res } = await this.$http.get("/check/sourcesGroup");
+      if (res.code == 200) {
+        this.selectData.fushen = res.data;
+        // console.log(this.selectData.fushen);
+      }
+    },
+    // 弹窗确定
+    determine() {
+      let flag = true;
+      for (var j = 0; j < this.newtableDatalist.length; j++) {
+        // 判断当前是否有未选择项
+        if (typeof this.newtableDatalist[j].againCheckResult == "object") {
+          flag = false;
+          this.$message("有未勾选项");
+          break;
+        }
+      }
+      // 当前flag为true  代表全部选则，直接走接口
+      if (flag == true) {
+           this.disab=true
+        this.checkresult();
+      }
+    },
+    //弹窗页面的提交接口
+    async checkresult() {
+      let list = this.newtableDatalist;
+      const { data: res } = await this.$http.post(
+        "/recheck/updateReCheckResult",
+        list
+      );
+      if (res.code == 200) {
+        // 弹窗关闭
+        this.$message(res.message);
+        this.dialogtijiao = false;
+        //判断当前页数
+        let totalPage = this.totalurl / this.mypageableurl.pageSizeurl; // 总页数
+        // 判断页数是否是小数
+        if (String(totalPage).indexOf(".") > -1) {
+          // 小数多加一页
+          totalPage = parseInt(totalPage) + 1;
+        }
+        this.formradio = [
+          // 先置空所有按钮
+          { radioArray0: "" },
+          { radioArray1: "" },
+          { radioArray2: "" },
+          { radioArray3: "" },
+          { radioArray4: "" },
+          { radioArray5: "" },
+          { radioArray6: "" },
+          { radioArray7: "" },
+          { radioArray8: "" },
+          { radioArray9: "" },
+        ];
+                this.disab=false
+        this.xq(); //再请求下一页数据
+      }
+    },
+    // _________________________
+    handleRadioChanges(val, item) {
+      // console.log(this.radio0);
+      console.log(val, item);
+    },
+    //日期查询
+    chaxun() {
+      // this.listtime();
+         this.xq();
+    },
+    //重置
+    chongzhi() {
+      this.mypageable.pageNum = 1;
+      // this.newdomainSimpleVo.dateValue_find = null;
+      // this.whiteSearchList.endCreateTime = null;
+      // this.whiteSearchList.startCreateTime = null;
+      // this.listtime();
+            this.newdomainSimpleVo.guishud=8
+      this.newdomainSimpleVo.dateValue_find = dayjs(new Date()).format(
+        "YYYY-MM-DD"
+      );
+      // this.newdomainSimpleVo.guishud = null;
+      this.xq();
+    },
+    handleClick(tab, event) {
+      // console.log('待审核');
+      this.mypageableurl.pageNumurl = 1;
+      this.xq();
     },
     dataCreate_change(val) {
       if (val && val != "") {
@@ -579,50 +636,31 @@ export default {
     },
     getIndex($index) {
       //$index为数据下标,对英序号要加一
-      // console.log($index)
+      // console.log($index);
       return (
         (this.mypageable.pageNum - 1) * this.mypageable.pageSize + $index + 1
       );
     },
-    getIndex1($index) {
-      //$index为数据下标,对英序号要加一
-      // console.log($index)
-      return (
-        (this.mypageableurl.pageNumurl - 1) * this.mypageableurl.pageSizeurl +
-        $index +
-        1
-      );
-    },
-    getIndex2($index) {
-      //$index为数据下标,对英序号要加一
-      // console.log($index)
-      return (
-        (this.mypageableurl1.pageNumurl1 - 1) *
-          this.mypageableurl1.pageSizeurl1 +
-        $index +
-        1
-      );
-    },
-    //详情
+    //自动请求待审核列表
     search(val) {
       // console.log(val);
       this.listloading = false;
       this.listloadingurl = true;
-      
-  
       this.searchurl = val;
       this.activeName = "0";
-          this.daichuzhilist()
+      this.daichuzhilist();
       this.xq();
     },
-    // 日期操作——详情
+    // 获取一页数据id
     async xq() {
       this.num = [];
       this.newnum = [];
       let list = {
-        checkStatus: "0",
-        checkTime: this.searchurl,
-        sources: parseInt(this.radio123),
+        checkStatus: 0, //请求未审核的数据
+       checkTime: dayjs(this.newdomainSimpleVo.dateValue_find).format(
+          "YYYY-MM-DD"
+        ),
+        sources: this.newdomainSimpleVo.guishud,
         myPage: {
           pageNum: this.mypageableurl.pageNumurl,
           pageSize: this.mypageableurl.pageSizeurl,
@@ -634,330 +672,37 @@ export default {
         list
       );
       if (res.code == 200) {
-        for (var i = 0; i < res.data.list.length; i++) {
-          this.num.push(Numlist(res.data.list[i].id));
-          // console.log(this.num);
-          // console.log(res.data.list[i]);
-        }
         // console.log(res.data);
+        for (var i = 0; i < res.data.list.length; i++) {
+          // console.log(res.data.list[i]);
+          this.num.push(res.data.list[i].id);
+        }
         this.newnum = this.num;
-        this.tableData1 = res.data.list;
+        // console.log(this.newnum);
         this.totalurl = res.data.total;
+        this.chakanxiangq(this.newnum);
       } else if (res.code == 500) {
         this.$message(res.message);
-        this.fanhui();
+        // this.fanhui();
       }
     },
-    async xqyi() {
-      this.num1 = [];
-      this.newnum1 = [];
-      // this.xqurl=val
-      let list = {
-        checkStatus: "1",
-        checkTime: this.searchurl,
-        sources: parseInt(this.radio123),
-        myPage: {
-          pageNum: this.mypageableurl1.pageNumurl1,
-          pageSize: this.mypageableurl1.pageSizeurl1,
-        },
-      };
-      // console.log(list);
-      // console.log(list);
-      const { data: res } = await this.$http.post(
-        "/recheck/queryUrlListByDate",
-        list
-      );
-      if (res.code == 200) {
-        for (var i = 0; i < res.data.list.length; i++) {
-          this.num1.push(Numlist(res.data.list[i].id));
-          // console.log(this.num);
-          // console.log(res.data.list[i]);
-        }
-        // console.log(this.num.length);
-        // console.log(res.data);
-        this.newnum1 = this.num1;
-        this.tableData1wei = res.data.list;
-        this.totalurl1 = res.data.total;
-      } else if (res.code == 500) {
-        this.$message(res.message);
-        this.fanhui();
-      }
-    },
-    //查看
-    chakan(val) {
-      this.shangxian = true;
-      this.xiaxian = true;
-      this.sId = val.id;
-      this.radio = "";
-
-      let res = getIndexres(this.num, this.sId);
-
-      if (res == 0) {
-        this.shangxian = false;
-      } else if (res == this.num.length - 1) {
-        // console.log(this.num.length);
-        this.xiaxian = false;
-      } else if (res > 0 && res < this.num.length) {
-        this.shangxian = true;
-        this.xiaxian = true;
-      }
-
-      this.listloadingright = true;
-      this.listloadingurl = true;
-      this.wenzi123 = true;
-      this.chakanxiangq(this.sId);
-    },
-    chakan1(val) {
-      this.shangxian = true;
-      this.xiaxian = true;
-      this.sId1 = val.id;
-      // console.log(this.sId1);
-      this.radio = "";
-      // console.log(this.sId);
-      // let res = this.num.indexOf(this.sId);
-
-      let res = getIndexres(this.num1, this.sId1);
-      if (res == 0) {
-        this.shangxian = false;
-      } else if (res == this.num1.length - 1) {
-        this.xiaxian = false;
-      } else if (res > 0 && res < this.num1.length) {
-        this.shangxian = true;
-        this.xiaxian = true;
-      }
-
-      // console.log(res);
-      // console.log(this.num);
-
-      this.listloadingright = true;
-      this.listloadingurl = true;
-      this.wenzi123 = true;
-      this.chakanxiangq(this.sId1);
-      // console.log(this.sId);
-    },
+    //获取每个url详情，包括：url、类型、图片地址、初审结果
     async chakanxiangq(n) {
-      this.form.srcList = [];
-      this.form.srcList1 = [];
-      this.radio = "";
-      const { data: res } = await this.$http.get("/finalcheck/getOrigintData", {
-        params: {
-          id: n,
-        },
-      });
-
-      if (res.code == 200) {
-        if (res.data.originData.checkResult2 != null) {
-          this.radio = res.data.originData.checkResult2;
-          this.radioloading = false;
-        } else {
-          this.radioloading = true;
-        }
-        // console.log(res.data);
-        //  //域名
-        this.form.yuming = res.data.originData.url;
-        // //来源
-        this.form.laiyuan = res.data.sources;
-        // //标题
-        this.form.title = res.data.originData.urlTitle;
-        // //原因
-        this.form.question = res.data.originData.reason;
-        // //特征
-        this.form.tezheng = res.data.originData.features;
-        // //类型
-        this.form.type = res.data.fraudType;
-        // //访问量
-        this.form.fangwenliang = res.data.originData.visits;
-        // //IP
-        this.form.ip = res.data.originData.ipAround;
-        // //排名
-        this.form.paiming = res.data.originData.ranking;
-        // //境内外
-        this.form.jingneiwai = res.data.originData.record;
-        // //图片
-        this.form.img = res.data.pcPicture;
-        this.form.img1 = res.data.phonePicture;
-        this.form.srcList.push(res.data.pcPicture);
-        this.form.srcList1.push(res.data.phonePicture);
-        // 审核状态
-        this.form.shenhezhuangtai = res.data.originData.status;
-        //id
-        this.form.id = res.data.originData.id;
-        //初审时间
-        this.form.chutime = res.data.checkInfo.startCheck1Time;
-        //初审结果
-        this.form.chuerr = res.data.checkInfo.startCheck1Result;
-      }
-    },
-    //上一页
-    shangyiye() {
-      if (this.activeName == 0) {
-        this.newres = getIndexres(this.num, this.sId);
-        this.newres1 = parseInt(this.newres) - 1;
-        if (this.num[this.newres1] == undefined) {
-          this.newres1 = 0;
-          this.shangxian = false;
-          this.$message("当前是列表第一条");
-        } else if (this.newres1 >= 0 && this.newres1 <= this.num.length - 1) {
-          this.shangxian = true;
-          this.xiaxian = true;
-          this.chakanxiangq(parseInt(this.num[this.newres1]));
-        }
-        this.sId = this.num[this.newres1];
-      } else if (this.activeName == 1) {
-        // console.log(this.sId1);
-        this.yinewres = getIndexres(this.num1, this.sId1);
-        // console.log(this.yinewres);
-        this.yinewres1 = parseInt(this.yinewres) - 1;
-        if (this.num1[this.yinewres1] == undefined) {
-          this.yinewres1 = 0;
-          this.shangxian = false;
-          this.$message("当前是列表第一条");
-        } else if (
-          this.yinewres1 >= 0 &&
-          this.yinewres1 <= this.num1.length - 1
-        ) {
-          this.shangxian = true;
-          this.xiaxian = true;
-          this.chakanxiangq(parseInt(this.num1[this.yinewres1]));
-        }
-        this.sId1 = this.num1[this.yinewres1];
-      }
-      // if (this.newres1 == -1) {
-      //   this.newres1 = this.newres1 + 1;
-      // }
-
-      //  console.log(this.sId);
-    },
-    //下一页
-    xiayiye() {
-      if (this.activeName == 0) {
-        this.newres = getIndexres(this.num, this.sId);
-        this.newres1 = parseInt(this.newres) + 1;
-        // if (this.newres1 == 10) {
-        //   this.newres1 = this.newres1 - 1;
-        // }
-
-        if (this.num[this.newres1] == undefined) {
-          this.newres1 = this.num.length - 1;
-          this.xiaxian = false;
-          this.$message("当前列表最后一条");
-        } else if (this.newres1 > 0 || this.newres1 < this.num.length - 1) {
-          this.shangxian = true;
-          this.xiaxian = true;
-          this.chakanxiangq(parseInt(this.num[this.newres1]));
-        }
-        this.sId = this.num[this.newres1];
-      } else if (this.activeName == 1) {
-        // console.log(this.num1);
-        // console.log(this.sId1);
-        this.yinewres = getIndexres(this.num1, this.sId1);
-        // console.log(this.yinewres);
-        this.yinewres1 = parseInt(this.yinewres) + 1;
-        //  console.log(this.yinewres1);
-        // if (this.newres1 == 10) {
-        //   this.newres1 = this.newres1 - 1;
-        // }
-
-        if (this.num1[this.yinewres1] == undefined) {
-          this.yinewres1 = this.num1.length - 1;
-          this.xiaxian = false;
-          this.$message("当前列表最后一条");
-        } else if (
-          this.yinewres1 > 0 ||
-          this.yinewres1 < this.num1.length - 1
-        ) {
-          this.shangxian = true;
-          this.xiaxian = true;
-          this.chakanxiangq(parseInt(this.num1[this.yinewres1]));
-        }
-        this.sId1 = this.num1[this.yinewres1];
-        // console.log(this.sId1);
-      }
-    },
-    //提交
-    async tijiao() {
-      let list = {
-        id: this.form.id,
-        againCheckResult: this.radio,
-        url: this.form.yuming,
-      };
+      // console.log(n);
+      let ids = [];
+      ids.push(n);
       const { data: res } = await this.$http.post(
-        "/recheck/updateReCheckResult",
-        list
+        "/recheck/getOriginData",
+        ids[0]
       );
       if (res.code == 200) {
-        // console.log(res);
-        this.$message(res.data);
-
-        // setTimeout(() => {
-        //   console.log(this.newnum, this.sId);
-        //   let numnet = getIndexres(this.newnum, this.sId);
-        //   console.log(this.numnet);
-        //   if (numnet == this.newnum.length - 1) {
-        //     this.$message("最后一条");
-        //   } else {
-        //     let numnet1 = parseInt(this.newnum[parseInt(numnet) + 1]);
-        //     // console.log(typeof(numnet1));
-        //     this.sId = parseInt(this.newnum[parseInt(numnet) + 1]);
-        //     // console.log(this.sId);
-        //     this.chakanxiangq(numnet1);
-        //     this.xq();
-        //   }
-        //   //
-        // }, 1000);
-        // setTimeout(() => {
-        //   // this.xqyi();
-        //   let yinumnet = getIndexres(this.newnum1, this.sId1);
-        //   if (yinumnet == this.newnum1.length - 1) {
-        //     this.$message("页面最后一条");
-        //   } else {
-        //     let yinumnet1 = parseInt(this.newnum1[parseInt(yinumnet) + 1]);
-        //     this.sId1 = parseInt(this.newnum1[parseInt(yinumnet) + 1]);
-        //     this.chakanxiangq(yinumnet1);
-        //     this.xqyi();
-        //   }
-        // }, 1500);
-
-        if (this.radio != "") {
-          this.radioloading = false;
-        }
+        this.tableDatalist = res.data;
       }
     },
-    //返回
-    fanhui() {
-      this.listloading = true;
-      this.listloadingurl = false;
-      this.wenzi123 = false;
-      this.listloadingright = false;
-    },
-    handleCurrentChange(val) {
-      this.mypageable.pageNum = val;
-      this.listtime();
-    },
-    handleCurrentChangeurl(val) {
-      this.mypageableurl.pageNumurl = val;
-      this.xq();
-    },
-    handleCurrentChangeurl1(val) {
-      // console.log(val);
-      this.mypageableurl1.pageNumurl1 = val;
-      this.xqyi();
-    },
-
     // 所属地
-    async suoshudi() {
-      const { data: res } = await this.$http.get("/check/sourcesGroup");
-      if (res.code == 200) {
-        // console.log(res.data);
-        // for(var i=0;i<res.data.length;i++){
-        //    this.shushoudi.push(res.data[i])
-        // }
 
-        this.shushoudione = res.data;
-      }
-    },
     handleClose() {
-      this.$message("请选择归属地");
+ 
     },
     time(val) {
       return dayjs(val).format("YYYY-MM-DD  HH:mm:ss");
@@ -970,6 +715,55 @@ export default {
       } else if (val == "3") {
         return "不确定";
       }
+    },
+    //返回
+    fanhui() {
+      // this.listloading = true;
+      // this.listloadingurl = false;
+      // this.wenzi123 = false;
+      // 清空上次请求的结果
+      this.formradio = [
+        // 先置空所有按钮
+        { radioArray0: "" },
+        { radioArray1: "" },
+        { radioArray2: "" },
+        { radioArray3: "" },
+        { radioArray4: "" },
+        { radioArray5: "" },
+        { radioArray6: "" },
+        { radioArray7: "" },
+        { radioArray8: "" },
+        { radioArray9: "" },
+      ];
+      this.tableDatalist = [];
+      this.totalurl = 0;
+      //     this.newdomainSimpleVo.dateValue_find = dayjs(new Date()).format(
+      //   "YYYY-MM-DD"
+      // );
+      // this.newdomainSimpleVo.guishud = 8;
+      this.xq();
+    },
+    handleCurrentChange(val) {
+      this.mypageable.pageNum = val;
+      this.listtime();
+    },
+    handleCurrentChangeurl(val) {
+      //点击页码
+      this.mypageableurl.pageNumurl = val;
+      this.formradio = [
+        // 先置空所有按钮
+        { radioArray0: "" },
+        { radioArray1: "" },
+        { radioArray2: "" },
+        { radioArray3: "" },
+        { radioArray4: "" },
+        { radioArray5: "" },
+        { radioArray6: "" },
+        { radioArray7: "" },
+        { radioArray8: "" },
+        { radioArray9: "" },
+      ];
+      this.xq();
     },
     type(val) {
       if (val == "dk") {
@@ -986,6 +780,11 @@ export default {
         return "正常网站";
       } else if (val == "sd") {
         return "刷单";
+      }
+    },
+    fushen_clearFun(val) {
+      if (val == "") {
+        this.newdomainSimpleVo.guishud = null;
       }
     },
   },
@@ -1009,24 +808,23 @@ export default {
 .el-col {
   border-radius: 4px;
 }
-
 .grid-content {
   border-radius: 4px;
   min-height: 24px;
+  padding: 0 0 6px 8px;
 }
 .row-bg {
   padding: 1px 0px;
 }
-
 .btn {
   display: inline-block;
   margin-left: 20px;
 }
 .bottom {
-  width: 37%;
-  height: 3.75rem /* 60/16 */ /* 40/16 */;
+  width: 100%;
+  // height: 3.75rem /* 60/16 */ /* 40/16 */;
   // text-align: right;
-  float: left;
+  // float: left;
   // margin-right: 20rem;
 }
 .btn1 {
@@ -1034,15 +832,16 @@ export default {
   font-size: 12px;
 }
 .form {
+  float: left;
   position: relative;
 }
 .return {
-  display: inline-block;
-  position: absolute;
-  z-index: 200;
-  // float: right;
-  margin-top: 10px;
-  right: 20px;
+  // display: inline-block;
+  // position: absolute;
+  // z-index: 200;
+  float: right;
+  // margin-top: 5px;
+  // right: 20px;
 }
 .xiangqingbtn {
   font-size: 12px;
@@ -1070,41 +869,45 @@ a {
 .el-table--mini th {
   padding: 5px 0;
 }
+/deep/ .el-pagination {
+  padding: 10px !important;
+}
 .bottomlist {
-  // width: 100%;
-  width: 98%;
+  width: 100%;
   height: 100%;
   position: relative;
 }
+.location {
+  padding: 20px 10px;
+}
 .wenzi {
-  position: absolute;
-  // color: #000;
   font-size: 14px;
   bottom: 0;
   left: 150px;
 }
 .guishudi {
-  position: absolute;
-  // color: #000;
   font-size: 15px;
   bottom: 0;
   left: 0;
   cursor: pointer;
 }
 .datalist {
-  width: 38%;
+  width: 100%;
   float: left;
 }
 .leftlist {
   width: 100%;
+  margin-top: 10px;
+  display: flex;
+  justify-content: left;
+  flex-wrap: wrap;
 }
 .listurl {
-  margin-top: 4%;
-  float: right;
-  width: 60%;
   height: 93%;
-  // border: 1px solid red;
-  position: relative;
+  width: 230px;
+  margin: 0 9px 30px 9px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.5);
+  padding: 10px 0;
 }
 .leftbtoom {
   width: 100%;
@@ -1138,26 +941,30 @@ table {
   font-size: 40px;
   cursor: pointer;
 }
-/deep/ .el-input--mini .el-input__inner {
-  // width: 220px;
-  width: 84%;
-}
 /deep/ .inner .el-input--mini .el-input__inner {
   width: 96%;
+  padding: 0 5px;
+}
+/deep/ .el-form-item--mini {
+  margin-bottom: 0 !important;
+}
+/deep/ .el-form-item__label {
+  width: 70px !important;
+  padding: 0 !important;
+  text-align: left;
+}
+/deep/ .el-form-item__content {
+  // margin-left: 70px !important;
 }
 .images {
-  width: 90%;
-  height: 400px;
-  // border: 1px solid blue;
-  // box-sizing: border-box;
+  width: 95%;
   margin: 0 auto;
-  // padding: 0px 50px;
 }
 .botcheck {
-  width: 45%;
-  height: 60px;
+  //width: 45%;
+  //height: 60px;
   // border: 1px solid red;
-  padding: 20px 10px;
+  padding: 0 10px;
   box-sizing: border-box;
   margin: 0 auto;
 }
@@ -1165,7 +972,7 @@ table {
   margin-top: 5%;
   padding: 10px 0;
   width: 47%;
-  height: 85%;
+  height: 80%;
   margin-left: 1%;
   margin-right: 2%;
   border: 5px solid #ccc;
@@ -1173,11 +980,11 @@ table {
   cursor: pointer;
 }
 .img1 {
-  padding: 10px 0;
-  width: 47%;
-  height: 85%;
-  margin-left: 2%;
-  margin-right: 1%;
+  // padding: 10px 0;
+  width: 100%;
+  height: 200px;
+  //margin-left: 2%;
+  //margin-right: 1%;
   border: 5px solid #ccc;
   box-sizing: border-box;
   cursor: pointer;
@@ -1185,7 +992,31 @@ table {
 /deep/ .el-input.is-disabled .el-input__inner {
   color: #000;
 }
-.te{
+.te {
   color: red;
+}
+.el-select {
+  width: 9.375rem /* 150/16 */;
+}
+.mg_r_10 {
+  margin-right: 10px;
+}
+.optbtn {
+  text-align: right;
+  padding: 5px 10px;
+}
+/deep/ textarea.el-textarea__inner {
+  width: 96%;
+  color: black !important;
+  resize: none;
+  padding: 5px;
+  font-family: none;
+}
+.toptitle {
+  height: 40px;
+  width: 100%;
+}
+.timerq{
+  width: 250px;
 }
 </style>
