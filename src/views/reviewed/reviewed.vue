@@ -135,7 +135,7 @@
       ref="multipleTable"
       :data="tableData"
       style="width: 100%"
-      max-height="650px"
+      max-height="550px"
       size="mini"
       class="tableStyle "
       empty-text="暂无数据"

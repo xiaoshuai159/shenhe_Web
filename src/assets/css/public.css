@@ -221,10 +221,22 @@
 .right_main_under .tableStyle1 .el-table__empty-block {
   background-color: #fff;
 }
-.right_main_under .el-input__inner {
+.right_main_under .el-input__inner  {
   background-color: #fff;
   border: 1px solid #394865;
   color: #000;
+}
+.right_main_under .el-textarea__inner{
+  background-color: #fff;
+  border: 1px solid #394865;
+  color: #000;
+}
+.right_main_under .el-range-editor.is-active,
+.right_main_under .el-range-editor.is-active:hover,
+.right_main_under .el-textarea__inner:focus,
+.right_main_under .el-select .el-textarea__inner:focus,
+.right_main_under .el-select .el-textarea.is-focus .el-textarea__inner {
+  border-color: #606266;
 }
 .right_main_under .el-range-editor.is-active,
 .right_main_under .el-range-editor.is-active:hover,

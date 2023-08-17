@@ -73,6 +73,31 @@ const routes = [
         component: () => import("../views/reslist/reslist")
       },
       {
+        path: '/domain_decide',
+        name: 'domain_decide',
+        meta: {
+          title: '域名判定查询'
+        },
+        component: () => import("../views/domain/domain")
+      },
+      {
+        path: '/data_push',
+        name: 'data_push',
+        meta: {
+          title: '平台数据推送'
+        },
+        component: () => import("../views/dataPush/dataPush")
+      },
+      {
+        path: '/alarm',
+        name: 'alarm',
+        meta: {
+          title: '警情接口'
+        },
+        component: () => import("../views/alarm/alarm")
+      },
+      // 流程记录-审核日志 ——>后端传的
+      {
         path: '/technologicalprocess',
         name: 'technologicalprocess',
         meta: {
@@ -132,12 +157,16 @@ const router = new VueRouter({
 })
 
 // 前置守卫
-// router.beforeEach((to, from, next) => {
-//   if (to.path === '/Login') return next()
-//   const user = window.sessionStorage.getItem('isLogin')
-//   if (user == 'true') return next()
-//   next('/Login')
-// })
+router.beforeEach((to, from, next) => {
+  if (to.path === '/') return next()
+  const storedToken  = window.sessionStorage.getItem('token')
+  if (!storedToken) {
+    // 禁止访问页面
+    next({ path: '/' });
+  } else {
+    next();
+  }
+})
 
 // 解决ElementUI导航栏中的vue-router在3.0版本以上重复点菜单报错问题
 const originalPush = VueRouter.prototype.push

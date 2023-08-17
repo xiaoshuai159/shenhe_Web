@@ -1,5 +1,5 @@
 <template>
-  <div class="sidebar">
+  <div class="sidebar" style="background-color: #545c64;">
     <el-menu
       router
       :default-active="$route.path"
@@ -60,7 +60,7 @@ export default {
         //   menuType: 1,
         // },
         // {
-        //   menuName: "流程记录页面",
+        //   menuName: "审核日志页面",
         //   menuUrl: "/technologicalprocess",
         //   name: "technologicalprocess",
         //   menuType: 1,
@@ -99,6 +99,78 @@ export default {
         //   ],
         // },
       ],
+      // 新需求：测试
+      items2: [
+        {
+          menuName: "首页",
+          menuUrl: "/welcome",
+          name: "welcome",
+          menuType: 1,
+        },
+        {
+          menuName: "初审",
+          menuUrl: "/Preliminaryexamination",
+          name: "Preliminaryexamination",
+          menuType: 1,
+        },
+        {
+          menuName: "复审",
+          menuUrl: "/reviewcase",
+          name: "reviewcase",
+          menuType: 1,
+        },
+        {
+          menuName: "终审",
+          menuUrl: "/finaljudgment",
+          name: "finaljudgment",
+          menuType: 1,
+        },
+        {
+          menuName: "审核结果列表",
+          menuUrl: "/reslist",
+          name: "reslist",
+          menuType: 1,
+        },
+        {
+          menuName: "审核日志",
+          menuUrl: "/technologicalprocess",
+          name: "technologicalprocess",
+          menuType: 1,
+        },
+        {
+          menuName: "系统管理",
+          menuUrl: "/xitong",
+          name: "xitong",
+          menuType: 0,
+          children: [
+             {
+              menuName: "用户管理",
+              menuUrl: "/user",
+              name: "user",
+              menuType: 1,
+            },
+            {
+              menuName: "角色管理",
+              menuUrl: "/Role",
+              name: "Role",
+              menuType: 1,
+            },
+              {
+              menuName: "菜单管理",
+              menuUrl: "/menu",
+              name: "menu",
+              menuType: 1,
+            },
+            {
+              menuName: "人数配置页面",
+              menuUrl: "/Numberallocation",
+              name: "Numberallocation",
+              menuType: 1,
+            },
+            
+          ],
+        },
+      ],
     };
   },
   components: {
@@ -119,14 +191,139 @@ export default {
 
     async qx() {
       const that = this;
-      const { data: res } = await this.$http.post("/menu/queryUserMenuList");
+      const { data: res } = await this.$http.get("/user/getInfo");
       // console.log(res);
       if (res.code == 200) {
-        // console.log(res.data);
-        this.items = res.data;
-
+        if(res.data.role === 'ADMIN'){
+          this.items.push(
+            {
+              menuName:"首页",
+              name:"welcome",
+              menuType: 1,
+            },
+        {
+          menuName: "初审",
+          name: "Preliminaryexamination",
+          menuType: 1,
+        },
+        {
+          menuName: "复审",
+          name: "reviewcase",
+          menuType: 1,
+        },
+        {
+          menuName: "终审",
+          name: "finaljudgment",
+          menuType: 1,
+        },{
+          menuName: "审核结果列表",
+          name: "reslist",
+          menuType: 1,
+        },
+        {
+          menuName: "审核日志",
+          name: "technologicalprocess",
+          menuType: 1,
+        },
+        {
+          menuName: "处置库",
+          name: "treatment",
+          menuType: 1,
+        },
+        {              
+          menuName:"域名判定查询",
+          name:"domain_decide",
+          menuType: 1,
+        },    
+        {              
+          menuName:"数据推送",
+          name:"data_push",
+          menuType: 1,
+        },  
+        {
+          menuName: "系统管理",
+          name: "xitong",
+          menuType: 0,
+          id:5,
+          // pid:-1,
+          children: [
+             {
+              menuName: "用户管理",
+              name: "user",
+              menuType: 1,
+            },        
+          ],
+        },
+            
+        )
+        }else if(res.data.role === 'FIRST'){
+          this.items.push({
+              menuName:"首页",
+              name:"welcome"
+            },
+        {
+          menuName: "初审",
+          name: "Preliminaryexamination",
+          menuType: 1,
+        },{
+          menuName: "审核日志",
+          name: "technologicalprocess",
+          menuType: 1,
+        },)
+        }else if(res.data.role === 'SECOND'){
+          this.items.push({
+              menuName:"首页",
+              name:"welcome"
+            },
+            {
+          menuName: "复审",
+          name: "reviewcase",
+          menuType: 1,
+        },{
+          menuName: "审核日志",
+          name: "technologicalprocess",
+          menuType: 1,
+        },)
+        }else if(res.data.role === 'THIRD'){
+          this.items.push({
+              menuName:"首页",
+              name:"welcome"
+            },
+            {
+          menuName: "终审",
+          name: "finaljudgment",
+          menuType: 1,
+        },{
+          menuName: "审核结果列表",
+          name: "reslist",
+          menuType: 1,
+        },
+        {
+          menuName: "审核日志",
+          name: "technologicalprocess",
+          menuType: 1,
+        },
+        {
+          menuName: "处置库",
+          name: "treatment",
+          menuType: 1,
+        },
+        {              
+          menuName:"域名判定查询",
+          name:"domain_decide",
+          menuType: 1,
+        },    
+        // {              
+        //   menuName:"数据推送",
+        //   name:"data_push",
+        //   menuType: 1,
+        // }
+        )
+        }
+        
+        // this.items = res.data;
         // =========================
-        res.data.forEach((item) => {
+        this.items.forEach((item) => {
           that.menuFir(item);
         });
         this.pid = this.getSetArr(this.pid);
@@ -134,10 +331,12 @@ export default {
         //   window.sessionStorage.setItem("btn", this.Newname1);
         // }
         // console.log(this.pid);
-        res.data.forEach((item) => {
+        this.items.forEach((item) => {
           that.menuSec(item);
         });
         // console.log(res.data);
+      }else if(res.code == 403){
+        this.$router.push("/")
       }
 
       // console.log(res.data);
@@ -203,6 +402,8 @@ export default {
   left: 0;
   top: 50px;
   bottom: 0;
+  
+  // height: 100%;
   overflow-y: scroll;
 }
 .sidebar::-webkit-scrollbar {

@@ -71,7 +71,7 @@
 
 <script>
 // import { sendWebsocket, closeWebsocket } from "@/utils/websocket.js";
-
+import qs from 'qs'
 export default {
   // inject: ["reload"],
   data() {
@@ -85,7 +85,7 @@ export default {
       dialog: false,
       fullscreen: false,
       message: 1,
-      name: "wu",
+      name: "",
       path: "",
       msgType: "",
       use: "",
@@ -112,29 +112,57 @@ export default {
 
   methods: {
     async up() {
+      if(this.newdomainSimpleVo.oldpwd==""){
+        this.$message('请输入原密码！')
+        return false
+      }
+      if(this.newdomainSimpleVo.xinpwd==""||this.newdomainSimpleVo.xinpwd2==""){
+        this.$message('请同时输入新密码和确认密码！')
+        return false
+      }
+      if(this.newdomainSimpleVo.xinpwd!=this.newdomainSimpleVo.xinpwd2){
+        this.$message('新密码输入有误，请重试！')
+        return false
+      }
+      if(this.newdomainSimpleVo.xinpwd.length<6||this.newdomainSimpleVo.xinpwd.length>20){
+        this.$message('密码长度必须在6-20个字符之间！')
+        return false
+      }
+      if(this.newdomainSimpleVo.oldpwd==this.newdomainSimpleVo.xinpwd){
+        this.$message('原密码和新密码相同，请重试！')
+        return false
+      }
+      
       let list = {
-        oldPassword: this.newdomainSimpleVo.oldpwd,
-        newPassword: this.newdomainSimpleVo.xinpwd,
-        newPassword1: this.newdomainSimpleVo.xinpwd2,
+        oldPwd: this.newdomainSimpleVo.oldpwd,
+        newPwd: this.newdomainSimpleVo.xinpwd,
+        // newPassword1: this.newdomainSimpleVo.xinpwd2,
       };
-      const { data: res } = await this.$http.post("/user/modifyPwd", list);
+      // const url = "/user/modifyPwd?"+qs.stringify(list)
+      const { data: res } = await this.$http.post("/user/modifyPwd",list);
       if (res.code == 200) {
         this.dialog = false;
-        this.$message(res.data);
+        this.$message(res.message);
         this.$router.push("/");
       } else {
-        this.$message(res.data);
+        this.$message(res.message);
         this.dialog = false;
       }
     },
     //-------------------------------------------------------------------------------------
     // 用户名下拉菜单选择事件
-    handleCommand(command) {
+    async handleCommand(command) {
       if (command == "loginout") {
         // localStorage.removeItem("ms_username");
-
-        window.sessionStorage.clear();
-        this.$router.push("/");
+        const { data: res } = await this.$http.post("/user/logout");
+        if(res.code==200){
+          window.sessionStorage.clear();
+          this.$router.push("/");
+          this.$message(res.message)
+        }else{
+          this.$message(res.message)
+        }
+        
       } else if (command == "upload") {
         this.dialog = true;
         this.newdomainSimpleVo.oldpwd = JSON.parse(

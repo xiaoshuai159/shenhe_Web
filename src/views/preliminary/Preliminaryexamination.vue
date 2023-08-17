@@ -2,30 +2,51 @@
   <div class="right_main_under">
     <div class="toptitle">
       <el-form size="mini" class="form" :inline="true">
-        <el-form-item >
+        <el-form-item prop="date">
           <!-- //待审核模块--时间 -->
           <el-date-picker
-          class="timerq"
+            class="timerq"
             v-model="newdomainSimpleVo.dateValue_find"
-        :clearable="false"
+            :clearable="false"
             placeholder="选择日期"
             type="date"
             
           >
           </el-date-picker>
         </el-form-item>
-        <el-form-item>
+        <el-form-item prop="address">
           <el-select
            class="timerq"
-            v-model="newdomainSimpleVo.guishud"
-            placeholder="归属地"
-        
-            @clear="fushen_clearFun(newdomainSimpleVo.guishud)"
+            v-model="selectedGuishudi"
+            placeholder="城市"        
+            @clear="fushen_clearFun(selectedGuishudi)"
+            @visible-change = 'visibleSelect'
+            :loading="selectLoading"
           >
             <el-option
-              v-for="(item, index) in selectData.fushen"
-              :label="item.mapName"
-              :value="item.sources"
+              v-for="(item, index) in selectData.guishud"
+              :label="item.name"
+              :value="item.id"
+              :key="index"
+            >
+            <span style="float:left">{{ item.name }}</span>
+            <span style="float:right; color: #8492a6; font-size: 13px">{{ item.cnt }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item >
+        <el-select
+           class="timerq"
+           collapse-tags
+            v-model="newdomainSimpleVo.shezhaType"
+            multiple
+            placeholder="涉诈类型"        
+            @clear="fushen_clearFun(newdomainSimpleVo.shezhaType)"
+          >
+            <el-option
+              v-for="(item, index) in selectData.shezha"
+              :label="item.name"
+              :value="item.id"
               :key="index"
             >
             </el-option>
@@ -33,10 +54,10 @@
         </el-form-item>
       </el-form>
       <div class="btn">
-        <el-button size="mini" type="primary" plain @click="chaxun"
+        <el-button size="mini" type="primary" plain @click="chaxun()"
           >查询</el-button
         >
-        <el-button size="mini" type="success" plain @click="chongzhi"
+        <el-button size="mini" type="success" plain @click="chongzhi()"
           >重置</el-button
         >
       </div>
@@ -57,58 +78,18 @@
 
     <div class="bottomlist">
       <div class="datalist">
-        <!-- <div v-if="listloading" class="leftlist">
-          <el-table
-            border
-            ref="multipleTable"
-            :data="tableData"
-            style="width: 100%"
-            max-height="650px"
-            size="mini"
-            class="tableStyle1"
-            empty-text="暂无数据"
-          >
-            <el-table-column prop="ID" label="序号" type="index" min-width="5%">
-              <template slot-scope="scope"
-                ><span v-text="getIndex(scope.$index)"></span
-              ></template>
-            </el-table-column>
-            <el-table-column prop="date" label="日期" min-width="75%">
-            </el-table-column>
-            <el-table-column label="操作" min-width="20%">
-              <template slot-scope="scope">
-                <el-button
-                  size="mini"
-                  type="text"
-                  @click="search(scope.row.date)"
-                  >详情</el-button
-                >
-              </template>
-            </el-table-column>
-          </el-table>
-          <div class="bottom">
-            <el-pagination
-              @current-change="handleCurrentChange"
-              :current-page="mypageable.pageNum"
-              :page-size="mypageable.pageSize"
-              layout="total, prev, pager, next, jumper"
-              :total="total"
-              class="pagePagination pageRight"
-              small
-            >
-            </el-pagination>
-          </div>
-        </div> -->
-        <!-- 审核列表 -->
-        
+        <!-- 审核列表 -->       
         <el-tabs
-          v-model="activeName"
-          @tab-click="handleClick"
+          v-model="activeName"          
           v-if="listloadingurl"
+          v-loading="loading"
         >
+        <!-- @tab-click="handleClick" -->
           <el-tab-pane label="待审核" name="0">
-            <!--待审列表- 一页数据-->
-            <div class="leftlist">
+            <!-- style="height:520px;overflow-y: auto;" -->
+            <div style="max-height: 65vh;max-width: 100%;overflow-y: auto;">
+              <!--待审列表- 一页数据-->
+            <div class="leftlist" >
               <!-- 每个块 -->
               <div
                 class="listurl"
@@ -159,8 +140,8 @@
                 <!--初审模块- 图片 -->
                 <div class="images">
                   <el-image
-                    :src="item.phonePicture"
-                    :preview-src-list="item.picArray"
+                    :src="item.littleRemoteFile"
+                    :preview-src-list="[item.remoteFile]"
                     class="img1"
                     title="移动端"
                   >
@@ -196,6 +177,8 @@
                 </div>
               </div>
             </div>
+            </div>
+            
             <!-- 页码 -->
             <div class="bottom1">
               <el-pagination
@@ -222,7 +205,7 @@
                 :title="this.gushudi"
                 @click="qiehuanguishudi"
               >
-                归属地:{{ this.gushudi }}
+                城市:{{ this.gushudi }}
               </span>
       
             </div> -->
@@ -230,26 +213,6 @@
         </el-tabs>
       </div>
     </div>
-    <!-- <el-dialog
-      title="选择归属地"
-      :visible.sync="dialogVisible"
-      width="30%"
-      :before-close="handleClose"
-      :showClose="false"
-    >
-      <el-radio-group v-model="radio123">
-        <el-radio
-          v-for="(item, index) in this.shushoudione"
-          :label="item.sources"
-          :value="item.mapName"
-          :key="index"
-          >{{ item.mapName }}</el-radio
-        >
-      </el-radio-group>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" plain @click="errer1">确 定</el-button>
-      </span>
-    </el-dialog> -->
 
     <!-- //提交前提示 -->
     <el-dialog
@@ -284,10 +247,14 @@ export default {
   name: "chushen",
   data() {
     return {
+      selectLoading:false,
       disab:false,
       selectData: {
-        fushen: [],
+        guishud: [],
+        shezha:[]
       },
+      loading:false,
+      selectedGuishudi:null,
       disabledTooltip: true,
       tableDatalist: [],
       gushudi: "",
@@ -302,21 +269,26 @@ export default {
       activeName: "0",
       newdomainSimpleVo: {
         dateValue_find: dayjs(new Date()).format("YYYY-MM-DD"), //时间
-        guishud: 8,
+        guishud: {
+          id:null
+        },
+        shezhaType:[]
       },
       whiteSearchList: {
         startCreateTime: "",
         endCreateTime: "",
       },
+      // 每页20条数据
       mypageable: {
         pageNum: 1,
-        pageSize: 10,
+        pageSize: 20,
       },
       total: 0,
       totalPages: "",
+      // 每页20条数据
       mypageableurl: {
         pageNumurl: 1,
-        pageSizeurl: 10,
+        pageSizeurl: 20,
       },
       totalurl: 0,
       totalPagesurl: "",
@@ -373,6 +345,16 @@ export default {
         { radioArray7: "" },
         { radioArray8: "" },
         { radioArray9: "" },
+        { radioArray10: "" },
+        { radioArray11: "" },
+        { radioArray12: "" },
+        { radioArray13: "" },
+        { radioArray14: "" },
+        { radioArray15: "" },
+        { radioArray16: "" },
+        { radioArray17: "" },
+        { radioArray18: "" },
+        { radioArray19: "" },
       ],
       newsformradio: [], //新数组
       dialogtijiao: false, //提示弹窗
@@ -393,38 +375,83 @@ export default {
           id: 3,
         },
       ],
+      tempGuishudi:null
     };
   },
   created() {
     // this.listtime();
-    this.xq();
+    
     this.suoshudi();
   },
+  // mounted() {
+  //   this.xq();
+  // },
   methods: {
+    async visibleSelect(){
+      // console.log(this.selectData.guishud);
+      
+          this.selectLoading = true
+          this.$nextTick(async()=>{
+            const list = {
+              discoverDate:dayjs(this.newdomainSimpleVo.dateValue_find).format("YYYY-MM-DD"),
+              stage:'first'
+            } 
+            const {data:res} = await this.$http.get("/dictionary/first/datasourceTaskCnt",{params:list});
+            if(res.code == 200){
+              if(!res.data.length){
+                this.selectData.guishud.map((item)=>{
+                  item.cnt = 0
+                })
+              }
+              // console.log(this.selectData.guishud);
+              
+                for(let i=0;i<this.selectData.guishud.length;i++){
+                  for(let j=0;j<res.data.length;j++){
+                    if(this.selectData.guishud[i].id == res.data[j].id){
+                      this.selectData.guishud[i].cnt = res.data[j].cnt
+                      // console.log(this.selectData.guishud[i].id,'走到map更新cnt',this.selectData.guishud[i].cnt);  
+                      break
+                    }else{
+                      this.selectData.guishud[i].cnt = 0
+                      // console.log(this.selectData.guishud[i].id,'走到map更新cnt 0');  
+                    }
+                  }
+                }
+              // res.data.forEach((item)=>{
+                
+                // console.log(item);
+                // this.selectData.guishud.map((item2)=>{
+                //   // console.log(item2.id);
+                //   if(item2.id==item.id){           
+                     
+                //     item2.cnt = item.cnt
+                //     console.log(item2.id,'走到map更新cnt',item2.cnt);   
+                //   }else{
+                    
+                //     item2.cnt = 0
+                //     console.log(item2.id,'走到map更新cnt为0');
+                //   }
+                // })
+              // })
+             this.$forceUpdate()
+             this.selectLoading = false
+            }else{
+              this.$message(res.message)
+              this.selectLoading = false
+            }
+          })
+          
+        
+    },
     //鼠标移上去时显示input的所有内容
     showTooltip() {
       this.disabledTooltip = false; //false：不管url的长度都显示
       // const lifeW = this.$refs.url;
       // this.disabledTooltip = lifeW[0].value.length < 10; //url长度大于10时才显示
     },
-    // qiehuanguishudi() {
-    //   this.dialogVisible = true;
-    //   this.listloading = true;
-    //   this.listloadingurl = false;
-    //   this.wenzi123 = false;
-    // },
-    // errer1() {
-    //   if (this.radio123 == "") {
-    //     this.$message("请选择归属地");
-    //   } else {
-    //     this.mypageableurl.pageNumurl = 1;
-    //     this.dialogVisible = false;
-    //     this.gsd();
-    //     this.guishudiLoading = true;
-    //   }
 
-    //   // this.daichuzhilist();
     // },
+    // 未用
     gsd() {
       // console.log( this.shushoudione);
       for (const key in this.shushoudione) {
@@ -434,10 +461,9 @@ export default {
         }
       }
     },
-    //初始化待处置条数
+    //初始化待处置条数 ：未用
     async daichuzhilist() {
       const num = this.radio123;
-      // console.log(num);
       const num1 = parseInt(num);
       const { data: res } = await this.$http.get("/check/checkNums", {
         params: {
@@ -452,30 +478,7 @@ export default {
         this.mapName = res.data.mapName;
       }
     },
-    //初始化时间
-    // async listtime() {
-    //   let list = {
-    //     around: "",
-    //     endCheckTime: this.whiteSearchList.endCreateTime,
-    //     startCheckTime: this.whiteSearchList.startCreateTime,
-    //     features: 0,
-    //     fraudType: "",
-    //     myPage: {
-    //       pageNum: this.mypageable.pageNum,
-    //       pageSize: this.mypageable.pageSize,
-    //     },
-    //     ranking: "",
-    //   };
-    //   const { data: res } = await this.$http.post("/checking/dateGroup", list);
-    //   if (res.code == 200) {
-    //     // console.log(res.data);
-    //     // let list = [];
-    //     // list = res.data.list.map((item) => ({ date: item }));
-    //     this.tableData = res.data.list;
-    //     this.totalPages = res.data.totalPages;
-    //     this.total = res.data.total;
-    //   }
-    // },
+
     // _________________________新的
     // 全选
     radioqx() {
@@ -491,29 +494,35 @@ export default {
       }
       this.$forceUpdate();
     },
-    //提交
+    //点击提交按钮
     submit() {
-        console.log(this.tableDatalist);
+        // console.log(this.tableDatalist);
+        if(this.tableDatalist.length === 0){
+          this.$message("提交错误，无数据！");
+          return false
+        }
       for (var i = 0; i < this.formradio.length; i++) {
         this.newtableDatalist = this.tableDatalist.map((items, index) => {
           return {
-            id: this.newnum[index],
-            url: items.url,
-            startCheckResult: this.formradio[index],
+            auditResult: this.chooseType(this.formradio[index]),
+            id: items.id,
+            did: items.did,
+            
           };
         });
       }
+      // console.log("刚刚处理完的");
       // console.log(this.newtableDatalist);
       // 拿当前页面的是否不确定数量
       let y = 0;
       let n = 0;
       let ny = 0;
       for (var j = 0; j < this.newtableDatalist.length; j++) {
-        if (this.newtableDatalist[j].startCheckResult == 1) {
+        if (this.newtableDatalist[j].auditResult == "YES") {
           y++;
-        } else if (this.newtableDatalist[j].startCheckResult == 2) {
+        } else if (this.newtableDatalist[j].auditResult == "NO") {
           n++;
-        } else if (this.newtableDatalist[j].startCheckResult == 3) {
+        } else if (this.newtableDatalist[j].auditResult == "NOT_SURE") {
           ny++;
         }
       }
@@ -522,13 +531,18 @@ export default {
       this.uncertain = ny;
       this.dialogtijiao = true;
     },
-    // 弹窗确定
+    // “提交” 弹窗确定
     determine() {
- 
+      // console.log("点完提交");
+      // console.log(this.newtableDatalist);
+      // if(this.newtableDatalist.length!==this.tableDatalist.length||this.tableDatalist.length === 0||this.newtableDatalist.length ===0){
+      //   this.$message("有未勾选项");
+      //   return 
+      // }
       let flag = true;
       for (var j = 0; j < this.newtableDatalist.length; j++) {
         // 判断当前是否有未选择项
-        if (typeof this.newtableDatalist[j].startCheckResult == "object") {
+        if (this.newtableDatalist[j].auditResult == undefined) {
           flag = false;
           this.$message("有未勾选项");
           break;
@@ -542,9 +556,12 @@ export default {
     },
     //弹窗页面的提交接口
     async checkresult() {
-      let list = this.newtableDatalist;
+      
+      let list = {
+        auditList:this.newtableDatalist
+      }
       const { data: res } = await this.$http.post(
-        "/checking/updateStartCheckResult",
+        "/audit/first/audit",
         list
       );
       if (res.code == 200) {
@@ -558,6 +575,11 @@ export default {
           // 小数多加一页
           totalPage = parseInt(totalPage) + 1;
         }
+        // console.log(totalPage);
+        // console.log(this.mypageableurl.pageNumurl);
+        if(this.mypageableurl.pageNumurl == totalPage){
+          --this.mypageableurl.pageNumurl
+        }
         this.formradio = [
           // 先置空所有按钮
           { radioArray0: "" },
@@ -570,6 +592,16 @@ export default {
           { radioArray7: "" },
           { radioArray8: "" },
           { radioArray9: "" },
+          { radioArray10: "" },
+        { radioArray11: "" },
+        { radioArray12: "" },
+        { radioArray13: "" },
+        { radioArray14: "" },
+        { radioArray15: "" },
+        { radioArray16: "" },
+        { radioArray17: "" },
+        { radioArray18: "" },
+        { radioArray19: "" },
         ];
         this.disab=false
         this.xq(); //再请求下一页数据
@@ -577,22 +609,22 @@ export default {
     },
     // _________________________
     handleRadioChanges(val, item) {
-      // console.log(this.radio0);
-      // console.log(val, item);
     },
-    //日期查询
+    //点击查询按钮
     chaxun() {
+      this.mypageableurl.pageNumurl = 1;
       this.xq();
     },
-    //重置
+    //点击重置按钮
     chongzhi() {
-      this.mypageable.pageNum = 1;
-      this.newdomainSimpleVo.guishud = 8;
+      this.selectedGuishudi = this.tempGuishudi
+      this.mypageableurl.pageNumurl = 1;
+      this.newdomainSimpleVo.shezhaType = null
       this.newdomainSimpleVo.dateValue_find = dayjs(new Date()).format(
         "YYYY-MM-DD"
       );
       // this.newdomainSimpleVo.guishud = null;
-      this.xq();
+      this.suoshudi()      
     },
     handleClick(tab, event) {
       // console.log('待审核');
@@ -608,55 +640,72 @@ export default {
       }
     },
     getIndex($index) {
-      //$index为数据下标,对英序号要加一
-      // console.log($index)
       return (
-        (this.mypageable.pageNum - 1) * this.mypageable.pageSize + $index + 1
+        (this.mypageableurl.pageNumurl - 1) * this.mypageable.pageSize + $index + 1
       );
     },
-    //自动请求待审核列表
+    //自动请求待审核列表：未用
     search(val) {
       // console.log(val);
       this.listloading = false;
       this.listloadingurl = true;
       this.searchurl = val;
       this.activeName = "0";
-      this.daichuzhilist();
+      this.daichuzhilist();  // 未用
       this.xq();
     },
-    // 日期操作——详情
+    // 查询操作————异步请求
     async xq() {
       this.num = [];
       this.newnum = [];
+      // console.log(this.newdomainSimpleVo.shezhaType);
+
+      let bigFraudTypesStr
+      if(this.newdomainSimpleVo.shezhaType){
+        bigFraudTypesStr = this.newdomainSimpleVo.shezhaType.join(',')
+        // 字符串为空的情况下，请求体会带此字段。 将其转为其他类型，请求体默认不带此字段
+        if(bigFraudTypesStr.length==0){
+          bigFraudTypesStr = []
+        }
+      }
+      if(this.newdomainSimpleVo.dateValue_find==null){
+        this.$message.error('请选择时间！')
+        return false
+      }
+      this.loading = true
+      // 新的请求list
       let list = {
-        checkStatus: 0,
         // checkTime: this.searchurl,
-        checkTime: dayjs(this.newdomainSimpleVo.dateValue_find).format(
+        day: dayjs(this.newdomainSimpleVo.dateValue_find).format(
           "YYYY-MM-DD"
         ),
-        sources: this.newdomainSimpleVo.guishud,
-        myPage: {
-          pageNum: this.mypageableurl.pageNumurl,
-          pageSize: this.mypageableurl.pageSizeurl,
-        },
+        source: this.selectedGuishudi,
+        bigFraudTypes: bigFraudTypesStr,
+        page: this.mypageableurl.pageNumurl,
+        pageSize: this.mypageableurl.pageSizeurl,
+
       };
-      // console.log(list);
-      const { data: res } = await this.$http.post(
-        "/checking/urlListByDate",
-        list
+      const { data: res } = await this.$http.get(
+        "/audit/first/list",
+        {params:list}
       );
       if (res.code == 200) {
-        // console.log(res.data);
-        for (var i = 0; i < res.data.list.length; i++) {
-          // console.log(res.data.list[i]);
-          this.num.push(res.data.list[i].id);
-        }
-        this.newnum = this.num;
-        this.totalurl = res.data.total;
-        this.chakanxiangq(this.newnum);
+        // console.log(res);
+        this.tableDatalist = res.dataList // 每条数据
+        this.totalurl = res.totalSum      // 总条数
+        // radioqx()
+        // for (var i = 0; i < this.tableDatalist.length; i++) {
+        //   // console.log(res.data.list[i]);
+        //   this.num.push(this.tableDatalist.list[i].id);
+        // }
+        // this.newnum = this.num;
+        // this.totalurl = res.data.total;
+        // this.chakanxiangq(this.newnum);
+        this.loading = false
       } else if (res.code == 500) {
         this.$message(res.message);
         // this.fanhui();
+        this.loading = false
       }
     },
     //获取每个url详情，包括：url、类型、图片地址
@@ -672,18 +721,40 @@ export default {
         this.tableDatalist = res.data;
       }
     },
-    // 所属地
+    // 所属地和涉诈类型
     async suoshudi() {
-      const { data: res } = await this.$http.get("/check/sourcesGroup");
-      if (res.code == 200) {
-        this.selectData.fushen = res.data;
-        // console.log(this.selectData.fushen);
+      this.loading = true
+      const promise1 =  this.$http.get("/dictionary/datasource");
+      const promise2 =  this.$http.get("dictionary/fraudType",{params:{isBig:true}})
+      const [data1,data2] = await Promise.all([promise1,promise2])
+      if(data1.data.code === 200 && data2.data.code === 200){
+        this.selectData.guishud = data1.data.data
+        this.selectData.shezha = data2.data.data
+        for(let i in data1.data.data){
+          if(data1.data.data[i].name==="上海"){
+            this.selectedGuishudi = data1.data.data[i].id
+            this.tempGuishudi = data1.data.data[i].id
+            break
+          }else{
+            if(data1.data.data[0]){
+              this.selectedGuishudi = data1.data.data[0].id
+              this.tempGuishudi = data1.data.data[0].id
+            }
+
+          }
+        }
+        // if(data2.data.data.length !== 0){
+        //   this.newdomainSimpleVo.shezhaType = data2.data.data[0]
+        // }
+        // console.log(this.newdomainSimpleVo.guishud);
+        
       }
+      this.xq()
     },
     handleClose() {
     
     },
-    //返回
+    // 点击刷新按钮
     fanhui() {
       // this.listloading = true;
       // this.listloadingurl = false;
@@ -701,9 +772,20 @@ export default {
         { radioArray7: "" },
         { radioArray8: "" },
         { radioArray9: "" },
+        { radioArray10: "" },
+        { radioArray11: "" },
+        { radioArray12: "" },
+        { radioArray13: "" },
+        { radioArray14: "" },
+        { radioArray15: "" },
+        { radioArray16: "" },
+        { radioArray17: "" },
+        { radioArray18: "" },
+        { radioArray19: "" },
       ];
       this.tableDatalist = [];
       this.totalurl = 0;
+      this.mypageableurl.pageNumurl = 1;
       // this.newdomainSimpleVo.dateValue_find = dayjs(new Date()).format(
       //   "YYYY-MM-DD"
       // );
@@ -711,7 +793,7 @@ export default {
       this.xq();
     },
     handleCurrentChange(val) {
-      this.mypageable.pageNum = val;
+      this.mypageableurl.pageNumurl = val;
       this.listtime();
     },
     handleCurrentChangeurl(val) {
@@ -729,8 +811,27 @@ export default {
         { radioArray7: "" },
         { radioArray8: "" },
         { radioArray9: "" },
+        { radioArray10: "" },
+        { radioArray11: "" },
+        { radioArray12: "" },
+        { radioArray13: "" },
+        { radioArray14: "" },
+        { radioArray15: "" },
+        { radioArray16: "" },
+        { radioArray17: "" },
+        { radioArray18: "" },
+        { radioArray19: "" },
       ];
       this.xq();
+    },
+    chooseType(val){
+      if (val == 1) {
+        return "YES";
+      } else if (val == 2) {
+        return "NO";
+      } else if (val == 3) {
+        return "NOT_SURE";
+      }
     },
     type(val) {
       if (val == "dk") {
@@ -749,9 +850,10 @@ export default {
         return "刷单";
       }
     },
+    // 清空“归属地”
     fushen_clearFun(val) {
       if (val == "") {
-        this.newdomainSimpleVo.guishud = null;
+        val = null;
       }
     },
   },
@@ -762,6 +864,7 @@ export default {
 .right_main_under {
   // margin: 20px 0 0 20px;
   // box-sizing: border-box;
+  // overflow-y: auto;
 }
 /deep/ .right_main_under .el-input--mini .el-input__inner {
   width: 200px !important;
@@ -790,6 +893,7 @@ export default {
   float: left;
   // display: inline-block;
   margin-left: 20px;
+  // margin-left: 270px;
 }
 .bottom {
   width: 100%;
@@ -840,6 +944,7 @@ a {
   padding: 10px !important;
 }
 .toptitle {
+  position: relative;
   height: 40px;
   width: 100%;
 }
@@ -867,16 +972,23 @@ a {
   float: left;
 }
 .leftlist {
+  // max-height: 550px;
+  // overflow-y: auto;
   width: 100%;
   margin-top: 10px;
   display: flex;
   justify-content: left;
   flex-wrap: wrap;
 }
+// /deep/.el-tabs__content{
+//   max-height: 550px;
+//   overflow-y: auto;
+// }
 .listurl {
   height: 93%;
   width: 230px;
-  margin: 0 9px 30px 9px;
+  margin: 0 9px 30px 9px; 
+  // margin: 0 8px 30px 8px;
  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.5);
   padding: 10px 0;
 }
@@ -963,6 +1075,8 @@ a {
   margin-right: 10px;
 }
 .optbtn {
+  position: sticky;
+  bottom:0px;
   text-align: right;
   padding: 5px 10px;
 }

@@ -17,19 +17,41 @@
       <el-form-item >
         <el-select
         class="timerq"
-          v-model="newdomainSimpleVo.guishud"
-          placeholder="归属地"
-          @clear="fushen_clearFun(newdomainSimpleVo.guishud)"
+          v-model="selectedGuishudi"
+          placeholder="城市"
+          @clear="fushen_clearFun(selectedGuishudi)"
+          @visible-change = 'visibleSelect'
+          :loading = "selectLoading"
         >
           <el-option
             v-for="(item, index) in selectData.fushen"
-            :label="item.mapName"
-            :value="item.sources"
+            :label="item.name"
+            :value="item.id"
             :key="index"
           >
+          <span style="float:left">{{ item.name }}</span>
+          <span style="float:right; color: #8492a6; font-size: 13px">{{ item.cnt }}</span>
           </el-option>
         </el-select>
       </el-form-item>
+      <el-form-item>
+        <el-select
+           class="timerq"
+           collapse-tags
+            v-model="newdomainSimpleVo.shezhaType"
+            multiple
+            placeholder="涉诈类型"        
+            @clear="fushen_clearFun(newdomainSimpleVo.shezhaType)"
+          >
+            <el-option
+              v-for="(item, index) in selectData.shezha"
+              :label="item.name"
+              :value="item.id"
+              :key="index"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
     </el-form>
     <div class="btn">
       <el-button size="mini" type="primary" plain @click="chaxun"
@@ -46,58 +68,18 @@
     </div>
     <!-- 终审模块——日期列表 -->
     <div class="bottomlist">
-      <div class="datalist">
-        <!-- <div v-if="listloading" class="leftlist">
-          <el-table
-            border
-            ref="multipleTable"
-            :data="tableData"
-            style="width: 100%"
-            max-height="650px"
-            size="mini"
-            class="tableStyle1"
-            empty-text="暂无数据"
-          >
-            <el-table-column prop="ID" label="序号" type="index" min-width="5%">
-              <template slot-scope="scope"
-                ><span v-text="getIndex(scope.$index)"></span
-              ></template>
-            </el-table-column>
-            <el-table-column prop="date" label="日期" min-width="75%">
-            </el-table-column>
-            <el-table-column label="操作" min-width="20%">
-              <template slot-scope="scope">
-                <el-button
-                  size="mini"
-                  type="text"
-                  @click="search(scope.row.date)"
-                  >详情</el-button
-                >
-              </template>
-            </el-table-column>
-          </el-table>
-          <div class="bottom">
-            <el-pagination
-              @current-change="handleCurrentChange"
-              :current-page="mypageable.pageNum"
-              :page-size="mypageable.pageSize"
-              layout="total, prev, pager, next, jumper"
-              :total="total"
-              class="pagePagination pageRight"
-            >
-            </el-pagination>
-          </div>
-        </div> -->
+      <div class="datalist">        
         <!-- 终审模块——详情url列表 -->
         <div class="fuxiugai">
           <el-tabs
             v-model="activeName"
             @tab-click="handleClick"
             v-if="listloadingurl"
+            v-loading = "loading"
           >
             <el-tab-pane label="初审是复审是" name="1">
-              <!--待审列表 -- 一页数据-->
-              <div class="leftlist">
+              <div style="max-height: 65vh;max-width: 100%;overflow-y: auto;">
+                <div class="leftlist">
                 <!-- 每个块 -->
                 <div
                   class="listurl"
@@ -149,8 +131,8 @@
                   <!--终审模块- 图片 -->
                   <div class="images">
                     <el-image
-                      :src="item.phonePicture"
-                      :preview-src-list="item.picArray"
+                      :src="item.littleRemoteFile"
+                      :preview-src-list="[item.remoteFile]"
                       class="img1"
                       title="移动端"
                     >
@@ -186,6 +168,9 @@
                   </div>
                 </div>
               </div>
+              </div>
+              <!--待审列表 -- 一页数据-->
+              
               <!-- 页码 -->
               <div class="bottom">
                 <el-pagination
@@ -231,7 +216,8 @@
               </el-dialog>
             </el-tab-pane>
             <el-tab-pane label="初复审有一个不确定" name="3">
-              <!--待审列表 -- 一页数据-->
+              <div style="max-height: 65vh;max-width: 100%;overflow-y: auto;">
+                <!--待审列表 -- 一页数据-->
               <div class="leftlist">
                 <!-- 每个块 -->
                 <div
@@ -283,7 +269,7 @@
                         <div class="grid-content bg-purple-dark">
                           <el-form-item label="初审时间：" class="inner">
                             <el-input
-                              :value="time(item.startCheck1Time)"
+                              :value="time(item.firstAuditTime)"
                               disabled
                             ></el-input>
                           </el-form-item>
@@ -293,7 +279,7 @@
                         ><div class="grid-content bg-purple-light">
                           <el-form-item label="初审结果：" class="inner">
                             <el-input
-                              :value="status(item.startCheck1Result)"
+                              :value="status(item.firstAuditResult)"
                               disabled
                             ></el-input>
                           </el-form-item></div
@@ -302,7 +288,7 @@
                         <div class="grid-content bg-purple-dark">
                           <el-form-item label="复审时间：" class="inner">
                             <el-input
-                              :value="time(item.againCheck1Time)"
+                              :value="time(item.secondAuditTime)"
                               disabled
                             ></el-input>
                           </el-form-item>
@@ -312,7 +298,7 @@
                         ><div class="grid-content bg-purple-light">
                           <el-form-item label="复审结果：" class="inner">
                             <el-input
-                              :value="status(item.againCheck1Result)"
+                              :value="status(item.secondAuditResult)"
                               disabled
                             ></el-input>
                           </el-form-item></div
@@ -322,8 +308,8 @@
                   <!--终审模块- 图片 -->
                   <div class="images">
                     <el-image
-                      :src="item.phonePicture"
-                      :preview-src-list="item.picArray"
+                      :src="item.littleRemoteFile"
+                      :preview-src-list="[item.remoteFile]"
                       class="img1"
                       title="移动端"
                     >
@@ -359,6 +345,8 @@
                   </div>
                 </div>
               </div>
+              </div>
+              
               <!-- 页码 -->
               <div class="bottom">
                 <el-pagination
@@ -404,7 +392,8 @@
               </el-dialog>
             </el-tab-pane>
             <el-tab-pane label="初复审都不确定" name="2">
-              <!-- 终审模块——详情url列表 -->
+              <div style="max-height: 65vh;max-width: 100%;overflow-y: auto;">
+                <!-- 终审模块——详情url列表 -->
               <div class="leftlist">
                 <!-- 每个块 -->
                 <div
@@ -457,8 +446,8 @@
                   <!--终审模块- 图片 -->
                   <div class="images">
                     <el-image
-                      :src="item.phonePicture"
-                      :preview-src-list="item.picArray"
+                      :src="item.littleRemoteFile"
+                      :preview-src-list="[item.remoteFile]"
                       class="img1"
                       title="移动端"
                     >
@@ -469,8 +458,33 @@
                       </div>
                     </el-image>
                   </div>
+                  <!--终审模块-初复审有一个不确定 radio -->
+                  <div class="botcheck">
+                    <el-radio-group v-model="formradio2[index]">
+                      <el-radio
+                        class="mg_r_10"
+                        :label="1"
+                        @change="handleRadioChanges(item)"
+                        >是</el-radio
+                      >
+                      <el-radio
+                        class="mg_r_10"
+                        :label="2"
+                        @change="handleRadioChanges(item)"
+                        >否</el-radio
+                      >
+                      <el-radio
+                        class="mg_r_10"
+                        :label="3"
+                        @change="handleRadioChanges(item)"
+                        >不确定</el-radio
+                      >
+                    </el-radio-group>
+                  </div>
                 </div>
               </div>
+              </div>
+              
               <!-- 页码 -->
               <div class="bottom">
                 <el-pagination
@@ -484,6 +498,33 @@
                 >
                 </el-pagination>
               </div>
+              <div class="optbtn">
+                <el-button @click="submit_tab2">提交</el-button>
+              </div>
+              <!-- 提交前提示 -->
+              <el-dialog
+                title="提示"
+                :visible.sync="dialogtijiao2"
+                width="30%"
+                :before-close="handleClose"
+                :showClose="false"
+              >
+                <div>
+                  <p>
+                    当前是：{{ this.yes2 }}条，当前否：{{
+                      this.no2
+                    }}条，当前不确定：{{ this.uncertain2 }}条
+                  </p>
+                </div>
+                <span slot="footer" class="dialog-footer">
+                  <el-button type="primary" plain @click="determine_tab2" :disabled="disab"
+                    >确 定</el-button
+                  >
+                  <el-button type="primary" plain @click="dialogtijiao2 = false"
+                    >取 消</el-button
+                  >
+                </span>
+              </el-dialog>
             </el-tab-pane>
             <!-- 当前位置 -->
             <!-- <div class="location">
@@ -493,7 +534,7 @@
                 :title="this.gushudi"
                 @click="qiehuanguishudi"
               >
-                归属地:{{ this.gushudi }}
+                城市:{{ this.gushudi }}
               </span>
                <span class="wenzi" v-if="wenzi123">
               当前日期 <span class="te">{{ this.mapName }}</span
@@ -505,9 +546,9 @@
         </div>
       </div>
     </div>
-    <!-- 选择归属地 -->
+    <!-- 选择城市 -->
     <!-- <el-dialog
-      title="选择归属地"
+      title="选择城市"
       :visible.sync="dialogVisible"
       width="30%"
       :before-close="handleClose"
@@ -538,8 +579,11 @@ export default {
   data() {
     return {
       disab:false,
+      loading:false,
+      selectedGuishudi:null,
       selectData: {
         fushen: [],
+        shezha:[]
       },
       disabledTooltip: true,
       tableDatalist1: [],
@@ -558,7 +602,8 @@ export default {
       activeName: "1",
       newdomainSimpleVo: {
         dateValue_find: dayjs(new Date()).format("YYYY-MM-DD"), //时间
-        guishud: 8,
+        guishud: null,
+        shezhaType: []
       },
       whiteSearchList: {
         startCreateTime: "",
@@ -750,6 +795,7 @@ export default {
       newsformradio: [], //新数组
       dialogtijiao1: false, //tab1提示弹窗
       dialogtijiao3: false, //tab3提示弹窗
+      dialogtijiao2: false,
       // tab1 初复审都是是
       yes1: 0, //是
       no1: 0, //否
@@ -758,6 +804,62 @@ export default {
       yes3: 0,
       no3: 0,
       uncertain3: 0,
+      // yes2 ， no2 ， uncertain2 初复审都不确定
+      yes2: 0,
+      no2: 0,
+      uncertain2: 0,
+      formradio2: [
+        { radioArray0: "" },
+        { radioArray1: "" },
+        { radioArray2: "" },
+        { radioArray3: "" },
+        { radioArray4: "" },
+        { radioArray5: "" },
+        { radioArray6: "" },
+        { radioArray7: "" },
+        { radioArray8: "" },
+        { radioArray9: "" },
+        { radioArray10: "" },
+        { radioArray11: "" },
+        { radioArray12: "" },
+        { radioArray13: "" },
+        { radioArray14: "" },
+        { radioArray15: "" },
+        { radioArray16: "" },
+        { radioArray17: "" },
+        { radioArray18: "" },
+        { radioArray19: "" },
+        { radioArray20: "" },
+        { radioArray21: "" },
+        { radioArray22: "" },
+        { radioArray23: "" },
+        { radioArray24: "" },
+        { radioArray25: "" },
+        { radioArray26: "" },
+        { radioArray27: "" },
+        { radioArray28: "" },
+        { radioArray29: "" },
+        { radioArray30: "" },
+        { radioArray31: "" },
+        { radioArray32: "" },
+        { radioArray33: "" },
+        { radioArray34: "" },
+        { radioArray35: "" },
+        { radioArray36: "" },
+        { radioArray37: "" },
+        { radioArray38: "" },
+        { radioArray39: "" },
+        { radioArray40: "" },
+        { radioArray41: "" },
+        { radioArray42: "" },
+        { radioArray43: "" },
+        { radioArray44: "" },
+        { radioArray45: "" },
+        { radioArray46: "" },
+        { radioArray47: "" },
+        { radioArray48: "" },
+        { radioArray49: "" },
+      ],
       tabs: [
         {
           name: "是",
@@ -772,18 +874,65 @@ export default {
           id: 3,
         },
       ],
+      tempGuishudi:null, 
+      selectLoading:false
     };
   },
   created() {
-    // this.listtime();
-           for (var i = 0; i < this.formradio1.length; i++) {
-          this.formradio1[i] = 1;
-        }
-    this.xq(1);
 
     this.suoshudi();
   },
   methods: {
+    async visibleSelect(){
+      // console.log(this.selectData.guishud);
+      
+          this.selectLoading = true
+          this.$nextTick(async()=>{
+            const list = {
+              discoverDate:dayjs(this.newdomainSimpleVo.dateValue_find).format("YYYY-MM-DD"),
+              stage:'third'
+            } 
+            const {data:res} = await this.$http.get("/dictionary/third/datasourceTaskCnt",{params:list});
+            if(res.code == 200){
+              if(!res.data.length){
+                this.selectData.fushen.map((item)=>{
+                  item.cnt = 0
+                })
+              }
+              for(let i=0;i<this.selectData.fushen.length;i++){
+                  for(let j=0;j<res.data.length;j++){
+                    if(this.selectData.fushen[i].id == res.data[j].id){
+                      this.selectData.fushen[i].cnt = res.data[j].cnt
+                      // console.log(this.selectData.fushen[i].id,'走到map更新cnt',this.selectData.fushen[i].cnt);  
+                      break
+                    }else{
+                      this.selectData.fushen[i].cnt = 0
+                      // console.log(this.selectData.fushen[i].id,'走到map更新cnt 0');  
+                    }
+                  }
+                }
+              // console.log(this.selectData.guishud);
+              // res.data.forEach((item)=>{
+              //   // console.log(item);
+              //   this.selectData.fushen.map((item2)=>{
+              //     // console.log(item2.id);
+              //     if(item2.id==item.id){               
+              //       item2.cnt = item.cnt
+              //     }else{
+              //       item2.cnt = 0
+              //     }
+              //   })
+              // })
+             this.$forceUpdate()
+             this.selectLoading = false
+            }else{
+              this.$message(res.message)
+              this.selectLoading = false
+            }
+          })
+          
+        
+    },
     //鼠标移上去时显示input的所有内容
     showTooltip() {
       this.disabledTooltip = false; //false：不管url的长度都显示
@@ -798,7 +947,7 @@ export default {
     // },
     errer1() {
       if (this.radio123 == "") {
-        this.$message("请选择归属地");
+        this.$message("请选择城市");
       } else {
         this.mypageableurl1.pageNumurl = 1;
         this.mypageableurl2.pageNumurl = 1;
@@ -837,10 +986,32 @@ export default {
     },
     // 所属地
     async suoshudi() {
-      const { data: res } = await this.$http.get("/check/sourcesGroup");
-      if (res.code == 200) {
-        this.selectData.fushen = res.data;
+      this.loading = true
+      const promise1 =  this.$http.get("/dictionary/datasource");
+      const promise2 =  this.$http.get("/dictionary/fraudType",{params:{isBig:true}})
+      const [data1,data2] = await Promise.all([promise1,promise2])
+      if(data1.data.code === 200 && data2.data.code === 200){
+        this.selectData.fushen = data1.data.data
+        this.selectData.shezha = data2.data.data
+        for(let i in data1.data.data){
+          if(data1.data.data[i].name==="上海"){
+            this.selectedGuishudi = data1.data.data[i].id
+            this.tempGuishudi = data1.data.data[i].id
+            break
+          }else{
+            if(data1.data.data[0]){
+              this.selectedGuishudi = data1.data.data[0].id
+              this.tempGuishudi = data1.data.data[0].id
+            }
+            
+          }
+        }
+        // if(data2.data.data.length !== 0){
+        //   this.newdomainSimpleVo.shezhaType = data2.data.data[0]
+        // }
+        
       }
+      this.xq()
     },
     handleClose() {
     
@@ -854,7 +1025,7 @@ export default {
         features: 0,
         fraudType: "",
         myPage: {
-          pageNum: this.mypageable.pageNum,
+          pageNum: this.mypageableurl.pageNumurl,
           pageSize: this.mypageable.pageSize,
         },
         ranking: "",
@@ -895,40 +1066,45 @@ export default {
     },
     //tab1提交
     submit_tab1() {
+      if(this.tableDatalist1.length === 0){
+        this.$message("提交错误，无数据！");
+          return false
+      }
       for (var i = 0; i < this.formradio1.length; i++) {
         this.newtableDatalist1 = this.tableDatalist1.map((items, index) => {
           return {
-            id: this.newnum[index],
-            url: items.url,
-            endCheckResult: this.formradio1[index],
+            auditResult: this.chooseType(this.formradio1[index]),
+            id: items.id,
+            did: items.did,
           };
         });
       }
-      console.log(this.newtableDatalist1);
       // 拿当前页面的是否不确定数量
       let y = 0;
       let n = 0;
       let ny = 0;
       for (var j = 0; j < this.newtableDatalist1.length; j++) {
-        if (this.newtableDatalist1[j].endCheckResult == 1) {
+        if (this.newtableDatalist1[j].auditResult == "YES") {
           y++;
-        } else if (this.newtableDatalist1[j].endCheckResult == 2) {
+        } else if (this.newtableDatalist1[j].auditResult == "NO") {
           n++;
-        } else if (this.newtableDatalist1[j].endCheckResult == 3) {
+        } else if (this.newtableDatalist1[j].auditResult == "NOT_SURE") {
           ny++;
         }
       }
+      
       this.yes1 = y;
       this.no1 = n;
       this.uncertain1 = ny;
       this.dialogtijiao1 = true;
+      
     },
     //tab1弹窗确定
     determine_tab1() {
       let flag = true;
       for (var j = 0; j < this.newtableDatalist1.length; j++) {
         // 判断当前是否有未选择项
-        if (typeof this.newtableDatalist1[j].endCheckResult == "object") {
+        if (this.newtableDatalist1[j].auditResult == undefined) {
           flag = false;
           this.$message("有未勾选项");
           break;
@@ -942,9 +1118,9 @@ export default {
     },
     //tab1弹窗页面的提交接口
     async checkresult_tab1() {
-      let list = this.newtableDatalist1;
+      let list = {auditList:this.newtableDatalist1};
       const { data: res } = await this.$http.post(
-        "/finalcheck/updateFinalCheckResult",
+        "/audit/third/audit",
         list
       );
       if (res.code == 200) {
@@ -957,6 +1133,9 @@ export default {
         if (String(totalPage).indexOf(".") > -1) {
           // 小数多加一页
           totalPage = parseInt(totalPage) + 1;
+        }
+        if(this.mypageableurl1.pageNumurl ==totalPage){
+          --this.mypageableurl1.pageNumurl
         }
         this.formradio1 = [
           // 先置空所有按钮
@@ -1012,32 +1191,37 @@ export default {
           { radioArray49: "" },
         ];
               this.disab=false
+              
         this.xq(1); //再请求下一页数据
       }
     },
 
     //tab3提交
     submit_tab3() {
+      if(this.tableDatalist3.length === 0){
+          this.$message("提交错误，无数据！");
+          return false
+        }
       for (var i = 0; i < this.formradio3.length; i++) {
         this.newtableDatalist3 = this.tableDatalist3.map((items, index) => {
           return {
-            id: this.newnum[index],
-            url: items.url,
-            endCheckResult: this.formradio3[index],
+            auditResult: this.chooseType(this.formradio3[index]),
+            id: items.id,
+            did: items.did,
           };
         });
       }
-      console.log(this.newtableDatalist3);
+      // console.log(this.newtableDatalist3);
       // 拿当前页面的是否不确定数量
       let y = 0;
       let n = 0;
       let ny = 0;
       for (var j = 0; j < this.newtableDatalist3.length; j++) {
-        if (this.newtableDatalist3[j].endCheckResult == 1) {
+        if (this.newtableDatalist3[j].auditResult == "YES") {
           y++;
-        } else if (this.newtableDatalist3[j].endCheckResult == 2) {
+        } else if (this.newtableDatalist3[j].auditResult == "NO") {
           n++;
-        } else if (this.newtableDatalist3[j].endCheckResult == 3) {
+        } else if (this.newtableDatalist3[j].auditResult == "NOT_SURE") {
           ny++;
         }
       }
@@ -1052,7 +1236,7 @@ export default {
       let flag = true;
       for (var j = 0; j < this.newtableDatalist3.length; j++) {
         // 判断当前是否有未选择项
-        if (typeof this.newtableDatalist3[j].endCheckResult == "object") {
+        if (this.newtableDatalist3[j].auditResult == undefined) {
           flag = false;
           this.$message("有未勾选项");
           break;
@@ -1066,9 +1250,9 @@ export default {
     },
     //tab3弹窗页面的提交接口
     async checkresult_tab3() {
-      let list = this.newtableDatalist3;
+      let list = {auditList:this.newtableDatalist3};
       const { data: res } = await this.$http.post(
-        "/finalcheck/updateFinalCheckResult",
+        "/audit/third/audit",
         list
       );
       if (res.code == 200) {
@@ -1081,6 +1265,9 @@ export default {
         if (String(totalPage).indexOf(".") > -1) {
           // 小数多加一页
           totalPage = parseInt(totalPage) + 1;
+        }
+        if(this.mypageableurl3.pageNumurl ==totalPage){
+          --this.mypageableurl3.pageNumurl
         }
         this.formradio3 = [
           // 先置空所有按钮
@@ -1139,7 +1326,139 @@ export default {
         this.xq(3); //再请求下一页数据
       }
     },
-
+    //tab2提交
+    submit_tab2() {
+      if(this.tableDatalist2.length === 0){
+          this.$message("提交错误，无数据！");
+          return false
+        }
+      for (var i = 0; i < this.formradio2.length; i++) {
+        this.newtableDatalist2 = this.tableDatalist2.map((items, index) => {
+          return {
+            auditResult: this.chooseType(this.formradio2[index]),
+            id: items.id,
+            did: items.did,
+          };
+        });
+      }
+      // console.log(this.newtableDatalist3);
+      // 拿当前页面的是否不确定数量
+      let y = 0;
+      let n = 0;
+      let ny = 0;
+      for (var j = 0; j < this.newtableDatalist2.length; j++) {
+        if (this.newtableDatalist2[j].auditResult == "YES") {
+          y++;
+        } else if (this.newtableDatalist2[j].auditResult == "NO") {
+          n++;
+        } else if (this.newtableDatalist2[j].auditResult == "NOT_SURE") {
+          ny++;
+        }
+      }
+      this.yes2 = y;
+      this.no2 = n;
+      this.uncertain2 = ny;
+      this.dialogtijiao2 = true;
+    },
+    //tab3弹窗确定
+    determine_tab2() {
+      
+      let flag = true;
+      // for (var j = 0; j < this.newtableDatalist2.length; j++) {
+      //   // 判断当前是否有未选择项
+      //   if (this.newtableDatalist2[j].auditResult == undefined) {
+      //     flag = false;
+      //     this.$message("有未勾选项");
+      //     break;
+      //   }
+      // }
+      // 当前flag为true  代表全部选则，直接走接口
+      if (flag == true) {
+          this.disab=true
+        this.checkresult_tab2();
+      }
+    },
+    //tab3弹窗页面的提交接口
+    async checkresult_tab2() {
+      let temptableDatalist = this.newtableDatalist2.filter((items)=>{
+        return items.auditResult!==undefined
+      })
+      let list = {auditList:temptableDatalist};
+      const { data: res } = await this.$http.post(
+        "/audit/third/audit",
+        list
+      );
+      if (res.code == 200) {
+        // 弹窗关闭
+        this.$message(res.message);
+        this.dialogtijiao2 = false;
+        //判断当前页数
+        let totalPage = this.totalurl2 / this.mypageableurl2.pageSizeurl; // 总页数
+        // 判断页数是否是小数
+        if (String(totalPage).indexOf(".") > -1) {
+          // 小数多加一页
+          totalPage = parseInt(totalPage) + 1;
+        }
+        if(this.mypageableurl2.pageNumurl ==totalPage){
+          --this.mypageableurl2.pageNumurl
+        }
+        this.formradio2 = [
+          // 先置空所有按钮
+          { radioArray0: "" },
+          { radioArray1: "" },
+          { radioArray2: "" },
+          { radioArray3: "" },
+          { radioArray4: "" },
+          { radioArray5: "" },
+          { radioArray6: "" },
+          { radioArray7: "" },
+          { radioArray8: "" },
+          { radioArray9: "" },
+          { radioArray10: "" },
+          { radioArray11: "" },
+          { radioArray12: "" },
+          { radioArray13: "" },
+          { radioArray14: "" },
+          { radioArray15: "" },
+          { radioArray16: "" },
+          { radioArray17: "" },
+          { radioArray18: "" },
+          { radioArray19: "" },
+          { radioArray20: "" },
+          { radioArray21: "" },
+          { radioArray22: "" },
+          { radioArray23: "" },
+          { radioArray24: "" },
+          { radioArray25: "" },
+          { radioArray26: "" },
+          { radioArray27: "" },
+          { radioArray28: "" },
+          { radioArray29: "" },
+          { radioArray30: "" },
+          { radioArray31: "" },
+          { radioArray32: "" },
+          { radioArray33: "" },
+          { radioArray34: "" },
+          { radioArray35: "" },
+          { radioArray36: "" },
+          { radioArray37: "" },
+          { radioArray38: "" },
+          { radioArray39: "" },
+          { radioArray40: "" },
+          { radioArray41: "" },
+          { radioArray42: "" },
+          { radioArray43: "" },
+          { radioArray44: "" },
+          { radioArray45: "" },
+          { radioArray46: "" },
+          { radioArray47: "" },
+          { radioArray48: "" },
+          { radioArray49: "" },
+        ];
+          this.disab=false
+        this.xq(2); //再请求下一页数据
+      }
+    },
     // _________________________
     handleRadioChanges(val, item) {
       // console.log(this.radio0);
@@ -1148,17 +1467,15 @@ export default {
     //日期查询
     chaxun() {
       // this.listtime();
+      this.mypageableurl1.pageNumurl = 1;
+      this.mypageableurl2.pageNumurl = 1;
+      this.mypageableurl3.pageNumurl = 1;
       if (this.tabnum == 1) {
-        // console.log("初审是复审是");
         for (var i = 0; i < this.formradio1.length; i++) {
           this.formradio1[i] = 1;
         }
         this.xq(1);
       } else if (this.tabnum == 3) {
-        // console.log("初复审有一个不确定");
-  // for (var i = 0; i < this.formradio3.length; i++) {
-  //         this.formradio3[i] = 1;
-  //       }
         this.xq(3);
       } else if (this.tabnum == 2) {
         // console.log("初复审都不确定");
@@ -1168,13 +1485,16 @@ export default {
     },
     //重置
     chongzhi() {
-      this.mypageable.pageNum = 1;
-      this.newdomainSimpleVo.guishud = 8;
+      this.mypageableurl1.pageNumurl = 1;
+      this.mypageableurl2.pageNumurl = 1;
+      this.mypageableurl3.pageNumurl = 1;
+      this.selectedGuishudi = this.tempGuishudi
+      this.newdomainSimpleVo.shezhaType = null
       this.newdomainSimpleVo.dateValue_find = dayjs(new Date()).format(
         "YYYY-MM-DD"
       );
+
       if (this.tabnum == 1) {
-        // console.log("初审是复审是");
 
         this.xq(1);
       } else if (this.tabnum == 3) {
@@ -1190,20 +1510,17 @@ export default {
     //tab切换
     handleClick(tab, event) {
       if (tab.name == 1) {
-        // console.log("初审是复审是");
         this.tabnum = 1;
         this.mypageableurl1.pageNumurl=1
           for (var i = 0; i < this.formradio1.length; i++) {
           this.formradio1[i] = 1;
         }
+        console.log('执行handleClick 1');
         this.xq(1);
       } else if (tab.name == 3) {
         // console.log("初复审有一个不确定");
         this.tabnum = 3;
-           this.mypageableurl3.pageNumurl=1
-        //    for (var i = 0; i < this.formradio3.length; i++) {
-        //   this.formradio3[i] = 1;
-        // }
+        this.mypageableurl3.pageNumurl=1
         this.xq(3);
       } else if (tab.name == 2) {
         // console.log("初复审都不确定");
@@ -1227,7 +1544,7 @@ export default {
       //$index为数据下标,对英序号要加一
       // console.log($index)
       return (
-        (this.mypageable.pageNum - 1) * this.mypageable.pageSize + $index + 1
+        (this.mypageableurl.pageNumurl - 1) * this.mypageable.pageSize + $index + 1
       );
     },
     //tab1列表翻页
@@ -1267,14 +1584,24 @@ export default {
       this.daichuzhilist();
       this.xq(1);
     },
-
+    notCntType(val){
+      if(val === 1){
+        return "zero"
+      }else if(val === 2){
+        return "two"
+      }else if(val === 3){
+        return "one"
+      }
+    },
     // 日期操作——详情
     async xq(tabnum) {
       this.num = [];
       this.newnum = [];
       let page_num = 0;
       let page_size = 0;
-      if (tabnum == 1) {
+
+      if (tabnum == 1||tabnum==null) {
+        tabnum = 1
         page_num = this.mypageableurl1.pageNumurl;
         page_size = this.mypageableurl1.pageSizeurl;
       } else if (tabnum == 2) {
@@ -1284,41 +1611,58 @@ export default {
         page_num = this.mypageableurl3.pageNumurl;
         page_size = this.mypageableurl3.pageSizeurl;
       }
+      let bigFraudTypesStr
+      if(this.newdomainSimpleVo.shezhaType){
+        bigFraudTypesStr = this.newdomainSimpleVo.shezhaType.join(',')
+        if(bigFraudTypesStr.length == 0){
+          bigFraudTypesStr = []
+        }
+      }
+      if(this.newdomainSimpleVo.dateValue_find==null){
+        this.$message.error('请选择时间！')
+        return false
+      }
+      this.loading = true
       let list = {
-        state: tabnum, // 1:初复审都是是 3:初复审有一个不确定 2:初复审都是否
-        checkTime: dayjs(this.newdomainSimpleVo.dateValue_find).format(
+        notCnt: this.notCntType(tabnum), // 1:初复审都是是 3:初复审有一个不确定 2:初复审都是否
+        day: dayjs(this.newdomainSimpleVo.dateValue_find).format(
           "YYYY-MM-DD"
         ),
-        sources: this.newdomainSimpleVo.guishud,
-        myPage: {
-          pageNum: page_num,
-          pageSize: page_size,
-        },
+        source: this.selectedGuishudi,
+        bigFraudTypes: bigFraudTypesStr,
+        page: page_num,
+        pageSize: page_size,
       };
-      // console.log(list);
-      const { data: res } = await this.$http.post(
-        "/finalcheck/queryUrlListByDate",
-        list
+      console.log(list);
+      const { data: res } = await this.$http.get(
+        "/audit/third/list",
+        {params:list}
       );
       if (res.code == 200) {
 
         // console.log(res.data);
-        for (var i = 0; i < res.data.list.length; i++) {
-          this.num.push(res.data.list[i].id);
-        }
+        // for (var i = 0; i < res.dataList.length; i++) {
+        //   this.num.push(res.dataList[i].id);
+        // }
+
         this.newnum = this.num;
         if (tabnum == 1) {
-          this.totalurl1 = res.data.total;
+          this.tableDatalist1 = res.dataList
+          this.totalurl1 = res.totalSum;
+          this.radioqx(1)
         } else if (tabnum == 2) {
-          this.totalurl2 = res.data.total;
+          this.tableDatalist2 = res.dataList
+          this.totalurl2 = res.totalSum;
         } else if (tabnum == 3) {
-          this.totalurl3 = res.data.total;
+          this.tableDatalist3 = res.dataList
+          this.totalurl3 = res.totalSum;
         }
-        this.chakanxiangq(this.newnum, tabnum);
-    
+        // this.chakanxiangq(this.newnum, tabnum);
+        this.loading = false
       } else if (res.code == 500) {
         this.$message(res.message);
-        this.fanhui();
+        // this.fanhui();
+        this.loading = false
       }
     },
     //获取每个url详情，包括：url、类型、图片地址、初审结果
@@ -1343,74 +1687,19 @@ export default {
       }
     },
     handleCurrentChange(val) {
-      this.mypageable.pageNum = val;
+      this.mypageableurl.pageNumurl = val;
       this.listtime();
     },
     //tab1翻页
     handleCurrentChangeurl1(val) {
-       
+       console.log('翻页了全选“是”');
       this.mypageableurl1.pageNumurl = val;
          if (this.tabnum == 1) {
         for (var i = 0; i < this.formradio1.length; i++) {
           this.formradio1[i] = 1;
         }
       }
-      // this.formradio1 = [
-      //   // 先置空所有按钮
-      //   { radioArray0: "" },
-      //   { radioArray1: "" },
-      //   { radioArray2: "" },
-      //   { radioArray3: "" },
-      //   { radioArray4: "" },
-      //   { radioArray5: "" },
-      //   { radioArray6: "" },
-      //   { radioArray7: "" },
-      //   { radioArray8: "" },
-      //   { radioArray9: "" },
-      //   { radioArray10: "" },
-      //   { radioArray11: "" },
-      //   { radioArray12: "" },
-      //   { radioArray13: "" },
-      //   { radioArray14: "" },
-      //   { radioArray15: "" },
-      //   { radioArray16: "" },
-      //   { radioArray17: "" },
-      //   { radioArray18: "" },
-      //   { radioArray19: "" },
-      //   { radioArray20: "" },
-      //   { radioArray21: "" },
-      //   { radioArray22: "" },
-      //   { radioArray23: "" },
-      //   { radioArray24: "" },
-      //   { radioArray25: "" },
-      //   { radioArray26: "" },
-      //   { radioArray27: "" },
-      //   { radioArray28: "" },
-      //   { radioArray29: "" },
-      //   { radioArray30: "" },
-      //   { radioArray31: "" },
-      //   { radioArray32: "" },
-      //   { radioArray33: "" },
-      //   { radioArray34: "" },
-      //   { radioArray35: "" },
-      //   { radioArray36: "" },
-      //   { radioArray37: "" },
-      //   { radioArray38: "" },
-      //   { radioArray39: "" },
-      //   { radioArray40: "" },
-      //   { radioArray41: "" },
-      //   { radioArray42: "" },
-      //   { radioArray43: "" },
-      //   { radioArray44: "" },
-      //   { radioArray45: "" },
-      //   { radioArray46: "" },
-      //   { radioArray47: "" },
-      //   { radioArray48: "" },
-      //   { radioArray49: "" },
-      // ];
-    //       setTimeout(item=>{
-    //     document.getElementById('demoItem').scrollIntoView()
-    // },1000)
+    this.radioqx(1)  // 翻页全选 “是”
       this.xq(1); //1:初复审都是是
      
     },
@@ -1418,59 +1707,6 @@ export default {
     handleCurrentChangeurl3(val) {
       
       this.mypageableurl3.pageNumurl = val;
-      // this.formradio3 = [
-      //   // 先置空所有按钮
-      //   { radioArray0: "" },
-      //   { radioArray1: "" },
-      //   { radioArray2: "" },
-      //   { radioArray3: "" },
-      //   { radioArray4: "" },
-      //   { radioArray5: "" },
-      //   { radioArray6: "" },
-      //   { radioArray7: "" },
-      //   { radioArray8: "" },
-      //   { radioArray9: "" },
-      //   { radioArray10: "" },
-      //   { radioArray11: "" },
-      //   { radioArray12: "" },
-      //   { radioArray13: "" },
-      //   { radioArray14: "" },
-      //   { radioArray15: "" },
-      //   { radioArray16: "" },
-      //   { radioArray17: "" },
-      //   { radioArray18: "" },
-      //   { radioArray19: "" },
-      //   { radioArray20: "" },
-      //   { radioArray21: "" },
-      //   { radioArray22: "" },
-      //   { radioArray23: "" },
-      //   { radioArray24: "" },
-      //   { radioArray25: "" },
-      //   { radioArray26: "" },
-      //   { radioArray27: "" },
-      //   { radioArray28: "" },
-      //   { radioArray29: "" },
-      //   { radioArray30: "" },
-      //   { radioArray31: "" },
-      //   { radioArray32: "" },
-      //   { radioArray33: "" },
-      //   { radioArray34: "" },
-      //   { radioArray35: "" },
-      //   { radioArray36: "" },
-      //   { radioArray37: "" },
-      //   { radioArray38: "" },
-      //   { radioArray39: "" },
-      //   { radioArray40: "" },
-      //   { radioArray41: "" },
-      //   { radioArray42: "" },
-      //   { radioArray43: "" },
-      //   { radioArray44: "" },
-      //   { radioArray45: "" },
-      //   { radioArray46: "" },
-      //   { radioArray47: "" },
-      //   { radioArray48: "" },
-      //   { radioArray49: "" },
-      // ];
        if (  this.tabnum == 3) {
         // console.log("初复审有一个不确定");
 
@@ -1482,6 +1718,7 @@ export default {
     //       setTimeout(item=>{
     //     document.getElementById('demoItem').scrollIntoView()
     // },1000)
+    this.radioqx(3)  // 翻页全选 “是”
       this.xq(3); //3:初复审有一个不确定
    
     },
@@ -1500,127 +1737,25 @@ export default {
       }
     },
     status(val) {
-      if (val == "1") {
+      if (val == "YES") {
         return "是";
-      } else if (val == "2") {
+      } else if (val == "NO") {
         return "否";
-      } else if (val == "3") {
+      } else if (val == "NOT_SURE") {
         return "不确定";
+      }
+    },
+    chooseType(val){
+      if(val==1){
+        return "YES"
+      }else if(val==2){
+        return "NO"
+      }else if(val==3){
+        return "NOT_SURE"
       }
     },
     //返回
     fanhui() {
-      // this.listloading = true;
-      // this.listloadingurl = false;
-      // this.wenzi123 = false;
-      // this.xiugailoading = false;
-      // 清空上次请求的结果
-      // this.formradio1 = [
-      //   // 先置空所有按钮
-      //   { radioArray0: "" },
-      //   { radioArray1: "" },
-      //   { radioArray2: "" },
-      //   { radioArray3: "" },
-      //   { radioArray4: "" },
-      //   { radioArray5: "" },
-      //   { radioArray6: "" },
-      //   { radioArray7: "" },
-      //   { radioArray8: "" },
-      //   { radioArray9: "" },
-      //   { radioArray10: "" },
-      //   { radioArray11: "" },
-      //   { radioArray12: "" },
-      //   { radioArray13: "" },
-      //   { radioArray14: "" },
-      //   { radioArray15: "" },
-      //   { radioArray16: "" },
-      //   { radioArray17: "" },
-      //   { radioArray18: "" },
-      //   { radioArray19: "" },
-      //   { radioArray20: "" },
-      //   { radioArray21: "" },
-      //   { radioArray22: "" },
-      //   { radioArray23: "" },
-      //   { radioArray24: "" },
-      //   { radioArray25: "" },
-      //   { radioArray26: "" },
-      //   { radioArray27: "" },
-      //   { radioArray28: "" },
-      //   { radioArray29: "" },
-      //   { radioArray30: "" },
-      //   { radioArray31: "" },
-      //   { radioArray32: "" },
-      //   { radioArray33: "" },
-      //   { radioArray34: "" },
-      //   { radioArray35: "" },
-      //   { radioArray36: "" },
-      //   { radioArray37: "" },
-      //   { radioArray38: "" },
-      //   { radioArray39: "" },
-      //   { radioArray40: "" },
-      //   { radioArray41: "" },
-      //   { radioArray42: "" },
-      //   { radioArray43: "" },
-      //   { radioArray44: "" },
-      //   { radioArray45: "" },
-      //   { radioArray46: "" },
-      //   { radioArray47: "" },
-      //   { radioArray48: "" },
-      //   { radioArray49: "" },
-      // ];
-      // this.formradio3 = [
-      //   // 先置空所有按钮
-      //   { radioArray0: "" },
-      //   { radioArray1: "" },
-      //   { radioArray2: "" },
-      //   { radioArray3: "" },
-      //   { radioArray4: "" },
-      //   { radioArray5: "" },
-      //   { radioArray6: "" },
-      //   { radioArray7: "" },
-      //   { radioArray8: "" },
-      //   { radioArray9: "" },
-      //   { radioArray10: "" },
-      //   { radioArray11: "" },
-      //   { radioArray12: "" },
-      //   { radioArray13: "" },
-      //   { radioArray14: "" },
-      //   { radioArray15: "" },
-      //   { radioArray16: "" },
-      //   { radioArray17: "" },
-      //   { radioArray18: "" },
-      //   { radioArray19: "" },
-      //   { radioArray20: "" },
-      //   { radioArray21: "" },
-      //   { radioArray22: "" },
-      //   { radioArray23: "" },
-      //   { radioArray24: "" },
-      //   { radioArray25: "" },
-      //   { radioArray26: "" },
-      //   { radioArray27: "" },
-      //   { radioArray28: "" },
-      //   { radioArray29: "" },
-      //   { radioArray30: "" },
-      //   { radioArray31: "" },
-      //   { radioArray32: "" },
-      //   { radioArray33: "" },
-      //   { radioArray34: "" },
-      //   { radioArray35: "" },
-      //   { radioArray36: "" },
-      //   { radioArray37: "" },
-      //   { radioArray38: "" },
-      //   { radioArray39: "" },
-      //   { radioArray40: "" },
-      //   { radioArray41: "" },
-      //   { radioArray42: "" },
-      //   { radioArray43: "" },
-      //   { radioArray44: "" },
-      //   { radioArray45: "" },
-      //   { radioArray46: "" },
-      //   { radioArray47: "" },
-      //   { radioArray48: "" },
-      //   { radioArray49: "" },
-      // ];
           if (this.tabnum == 1) {
         for (var i = 0; i < this.formradio1.length; i++) {
           this.formradio1[i] = 1;
@@ -1636,15 +1771,14 @@ export default {
       this.totalurl1 = 0;
       this.tableDatalist2 = [];
       this.totalurl2 = 0;
-      this.tableDatalist2 = [];
-      this.totalurl2 = 0;
+      this.tableDatalist3 = [];
+      this.totalurl3 = 0;
 
       // this.newdomainSimpleVo.dateValue_find = dayjs(new Date()).format(
       //   "YYYY-MM-DD"
       // );
-      // this.newdomainSimpleVo.guishud = 8;
+      // this.selectedGuishudi = 8;
       if (this.tabnum == 1) {
-        // console.log("初审是复审是");
 this.mypageableurl1.pageNumurl=1
         this.xq(1);
       } else if (this.tabnum == 3) {
@@ -1659,26 +1793,10 @@ this.mypageableurl2.pageNumurl=1
     },
     fushen_clearFun(val) {
       if (val == "") {
-        this.newdomainSimpleVo.guishud = null;
+        this.selectedGuishudi = null;
       }
     },
-    // type(val) {
-    //   if (val == "dk") {
-    //     return "贷款";
-    //   } else if (val == "lc") {
-    //     return "理财";
-    //   } else if (val == "gjf") {
-    //     return "公检法";
-    //   } else if (val == "gw") {
-    //     return "网络购物";
-    //   } else if (val == "qt") {
-    //     return "其他类型";
-    //   } else if (val == "normal") {
-    //     return "正常网站";
-    //   } else if (val == "sd") {
-    //     return "刷单";
-    //   }
-    // },
+
   },
 };
 </script>

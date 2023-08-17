@@ -2,20 +2,20 @@
   <div class="right_main_under">
     <el-form size="mini" label-width="80px" :inline="true">
       <el-row :gutter="20">
-        <el-col :span="16"
+        <el-col :span="20"
           ><div class="grid-content bg-purple">
             <!-- 流程记录页面头部模块——域名 -->
             <el-form-item>
               <el-select
                 v-model="form.name"
-                placeholder="归属地"
+                placeholder="城市"
                   clearable
                 @clear="fushencity_clearFun(form.name)"
               >
                 <el-option
                   v-for="(item, index) in selectDatacity.fushen"
-                  :label="item.label"
-                  :value="item.value"
+                  :label="item.name"
+                  :value="item.id"
                   :key="index"
                 >
                 </el-option>
@@ -24,25 +24,26 @@
             <!-- 涉诈类型 -->
             <el-form-item>
               <el-select
-                v-model="form.chushen"
+                v-model="form.shezhaType"
                 placeholder="涉诈类型"
+                
                 clearable
-                @clear="chushen_clearFun(form.chushen)"
+                @clear="chushen_clearFun(form.shezhaType)"
               >
                 <el-option
-                  v-for="item in selectData.chushen"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
+                  v-for="item in selectData.shezhaType"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
                 >
                 </el-option>
               </el-select>
             </el-form-item>
-            <!-- 归属地 -->
+            <!-- 城市 -->
             <!-- <el-form-item>
               <el-select
                 v-model="form.fushen"
-                placeholder="归属地"
+                placeholder="城市"
                 clearable
                 @clear="fushen_clearFun(form.fushen)"
               >
@@ -80,17 +81,20 @@
                 range-separator="至"
                 start-placeholder="开始日期"
                 end-placeholder="结束日期"
-                value-format="yyyy-MM-dd HH:mm:ss"
-                :default-time="['00:00:00', '23:59:59']"
+                value-format="yyyy-MM-dd"
+                
+                :clearable="false"
               >
+              <!-- value-format="yyyy-MM-dd HH:mm:ss"
+                :default-time="['00:00:00', '23:59:59']" 之前的-->
               </el-date-picker>
             </el-form-item>
             <el-form-item>
               <el-input v-model="form.url" placeholder="请输入域名"></el-input>
             </el-form-item></div
         ></el-col>
-        <el-col :span="8"
-          ><div class="grid-content bg-purple">
+        <el-col :span="4"
+          ><div class="grid-content bg-purple" style="float: right;">
             <!-- 流程记录页面头部模块——button -->
             <el-button size="mini" type="primary" plain @click="chaxun"
               >查询</el-button
@@ -107,9 +111,9 @@
               :loading="loadingbut"
               >{{ loadingbuttext }}</el-button
             >
-            <el-button size="mini" type="success" plain @click="uploadwj"
+            <!-- <el-button size="mini" type="success" plain @click="uploadwj"
               >上传</el-button
-            >
+            > -->
           </div></el-col
         >
       </el-row>
@@ -118,10 +122,11 @@
     <!-- 流程记录页面模块——列表 -->
     <el-table
       border
+      v-loading="loading"
       ref="multipleTable"
       :data="tableData"
       style="width: 100%"
-      max-height="650px"
+      max-height="550px"
       size="mini"
       class="tableStyle"
       empty-text="暂无数据"
@@ -136,42 +141,42 @@
           {{ time(scope.row.createTime) }}
         </template>
       </el-table-column>
-      <el-table-column prop="urlTitle" label="网址标题" show-overflow-tooltip>
+      <el-table-column prop="title" label="网址标题" show-overflow-tooltip>
       </el-table-column>
       <el-table-column prop="url" label="URL" show-overflow-tooltip>
       </el-table-column>
       <!-- <el-table-column prop="urlHash" label="URL哈希值" show-overflow-tooltip>
       </el-table-column> -->
-      <el-table-column prop="yjcType" label="yjc类别" show-overflow-tooltip>
+      <el-table-column prop="reason" label="yjc类别" show-overflow-tooltip>
       </el-table-column>
-      <el-table-column prop="urlIp" label="网址对应IP" show-overflow-tooltip>
+      <el-table-column prop="ip" label="网址对应IP" show-overflow-tooltip>
       </el-table-column>
       <el-table-column
-        prop="domesticAndForeign"
+        prop="domesticOverseas"
         label="境内外"
         show-overflow-tooltip
       >
         <template slot-scope="scope">
-          {{ scope.row.domesticAndForeign == -1 ? "境外" : "境内" }}
+          {{ scope.row.domesticOverseas }}
         </template>
       </el-table-column>
-      <el-table-column prop="ranking" label="排名" show-overflow-tooltip>
+      <el-table-column prop="rank" label="排名" show-overflow-tooltip>
         <template slot-scope="scope">
           {{ scope.row.rank == -1 ? "无排名" : scope.row.rank }}
         </template>
       </el-table-column>
 
-      <el-table-column prop="screenName" label="截图名称" show-overflow-tooltip>
+      <el-table-column prop="snapshot" label="截图名称" show-overflow-tooltip>
       </el-table-column>
       <el-table-column
-        prop="yjcHttpType"
+        prop="yjcType"
         label="yjc协议类型"
         show-overflow-tooltip
       >
       </el-table-column>
-      <el-table-column prop="featureNum" label="访问量" show-overflow-tooltip>
+      <el-table-column prop="visits" label="访问量" show-overflow-tooltip>
       </el-table-column>
-      <el-table-column prop="belong" label="数据归属地" show-overflow-tooltip>
+      <el-table-column prop="source" label="数据归属地" show-overflow-tooltip>
       </el-table-column>
       <el-table-column prop="fraudType" label="涉诈类型" show-overflow-tooltip>
       </el-table-column>
@@ -237,20 +242,23 @@ import dayjs from "dayjs";
 export default {
   data() {
     return {
+      loading:false,
       selectDatacity: {
         fushen: [],
       },
       shangchuan: false,
       whiteSearchList: {
-        startCreateTime: null,
-        endCreateTime: null,
+        startCreateTime:  dayjs().month(3).format("YYYY-MM-DD"),
+        endCreateTime: dayjs(new Date()).format("YYYY-MM-DD"),
       },
       form: {
-        name: "",
-        chushen: null,
+        name: null,
+        shezhaType: null,
         fushen: null,
         zhongshen: null,
-        dateValue_find: null,
+        dateValue_find:[
+          dayjs().month(3).format("YYYY-MM-DD") ,dayjs(new Date()).format("YYYY-MM-DD")
+        ],
         http: null,
         url: null,
       },
@@ -275,81 +283,27 @@ export default {
       total: 1,
       totalPages: "",
       selectData: {
-        chushen: [
-          { value: "kf_ds", label: "kf_ds" },
-          { value: "kf_wl", label: "kf_wl" },
-          { value: "kf_other", label: "kf_other" },
-          { value: "gjf_mc", label: "gjf_mc" },
-          { value: "gjf_ss", label: "gjf_ss" },
-          { value: "gjf_etc", label: "gjf_etc" },
-          { value: "gjf_other", label: "gjf_other" },
-          { value: "sd", label: "sd" },
-          { value: "dk_xyz", label: "dk_xyz" },
-          { value: "dk_te", label: "dk_te" },
-          { value: "dk_dk", label: "dk_dk" },
-          { value: "dk_other", label: "dk_other" },
-          { value: "jjgw", label: "jjgw" },
-          { value: "szp_lc", label: "szp_lc" },
-          {
-            value: "szp_dubo",
-            label: "szp_dubo",
-          },
-          { value: "szp_ty", label: "szp_ty" },
-          { value: "szp_yx", label: "szp_yx" },
-          {
-            value: "ds_gw",
-            label: "ds_gw",
-          },
-          { value: "ds_fw", label: "ds_fw" },
-          { value: "ds_other", label: "ds_other" },
-          { value: "jy_jr", label: "jy_jr" },
-          { value: "jy_hl", label: "jy_hl" },
-          { value: "jy_jy", label: "jy_jy" },
-          { value: "jy_other", label: "jy_other" },
-          { value: "zx_xyd", label: "zx_xyd" },
-          { value: "zx_bljl", label: "zx_bljl" },
-          { value: "zx_other", label: "zx_other" },
-          { value: "mc_ld", label: "mc_ld" },
-          { value: "mc_sr", label: "mc_sr" },
-          { value: "mc_gz", label: "mc_gz" },
-          { value: "mc_other", label: "mc_other" },
-          { value: "yx_card", label: "yx_card" },
-          { value: "yx_zhzb", label: "yx_zhzb" },
-          { value: "yx_other", label: "yx_other" },
-          { value: "other_zj", label: "other_zj" },
-          { value: "other_zp", label: "other_zp" },
-          { value: "other_jp", label: "other_jp" },
-          { value: "other_tp", label: "other_tp" },
-          { value: "app_ff", label: "app_ff" },
-          { value: "xzym", label: "xzym" },
+        shezhaType: [
+        
         ],
         fushen: [
-          {
-            value: "1",
-            label: "Http+Ip/Url",
-          },
-          {
-            value: "2",
-            label: "Https+Url",
-          },
-          {
-            value: "3",
-            label: "Https+Ip",
-          },
+        { value:1, label:'1'},
+          { value:2, label:'2'},
+          { value:3, label:'3'},
         ],
         zhongshen: [
-          {
-            value: "1",
-            label: "是",
-          },
-          {
-            value: "2",
-            label: "否",
-          },
-          {
-            value: "3",
-            label: "不确定",
-          },
+          // {
+          //   value: "1",
+          //   label: "是",
+          // },
+          // {
+          //   value: "2",
+          //   label: "否",
+          // },
+          // {
+          //   value: "3",
+          //   label: "不确定",
+          // },
         ],
       },
       loadingbuttext: "导出",
@@ -357,32 +311,69 @@ export default {
     };
   },
   created() {
-    this.suoshudi();
-    this.techlist();
+    // this.suoshudi();
+    // this.techlist();
+    this.getSelectionData()
   },
   methods: {
+    async getSelectionData(){
+      this.loading = true
+      const promise1 =  this.$http.get("/dictionary/datasource");
+      const promise2 =  this.$http.get("/dictionary/fraudType")
+      const [sourceData,fraudData] = await Promise.all([promise1,promise2])
+      if(sourceData.data.code === 200 && fraudData.data.code === 200){
+        // if(userData.data.data.length !== 0){
+        //   this.newdomainSimpleVo.shezhaType = userData.data.data[0]
+        // }
+        // console.log(sourceData.data.data);
+        // console.log(userData.data.dataList);
+        this.selectDatacity.fushen = sourceData.data.data
+        this.selectData.shezhaType = fraudData.data.data
+        // console.log(this.selectDatacity.fushen);
+        // console.log(this.selectData.fushen);
+        // for(let i in this.selectData.chengshi){
+        //   if(this.selectData.chengshi[i].name==="上海"){
+        //     this.form.chengshi = this.selectData.chengshi[i]
+        //     break
+        //   }else{
+        //     this.form.chengshi = this.selectData.chengshi[0]
+        //   }
+        // }
+        // this.form.username = this.selectData.type[0]
+      }
+      this.techlist()
+    },
     //初始化列表
     async techlist() {
+      // let bigFraudTypesStr = this.form.shezhaType.join(',')
+      // // 字符串为空的情况下，请求体会带此字段。 将其转为其他类型，请求体默认不带此字段
+      // if(bigFraudTypesStr.length==0){
+      //   bigFraudTypesStr = []
+      // }
+      this.loading = true
       let list = {
-        myPage: {
-          pageNum: this.mypageable.pageNum,
-          pageSize: this.mypageable.pageSize,
-        },
-        createTimeStart: this.whiteSearchList.startCreateTime,
-        createTimeEnd: this.whiteSearchList.endCreateTime,
-        fraudType: this.form.chushen,
-        belong: this.form.name,
-        yjcHttpType: this.form.http,
+        page: this.mypageable.pageNum,
+        pageSize: this.mypageable.pageSize,
+
+        start: this.whiteSearchList.startCreateTime,
+        end: this.whiteSearchList.endCreateTime,
+        fraudType: this.form.shezhaType,
+        source: this.form.name,
+        yjcType: this.form.http,
         url: this.form.url,
       };
-      const { data: res } = await this.$http.post(
-        "/treatment/batchFindTreatment",
-        list
+      const { data: res } = await this.$http.get(
+        "/treat/list",
+        {params:list}
       );
       if (res.code == 200) {
         // console.log(res.data);
-        this.tableData = res.data.list;
-        this.total = res.data.total;
+        this.tableData = res.dataList;
+        this.total = res.totalSum;
+        this.loading = false
+      }else{
+        this.$message(res.message)
+        this.loading = false
       }
     },
     async suoshudi() {
@@ -407,20 +398,23 @@ export default {
     },
 
     chaxun() {
+      this.mypageable.pageNum = 1;
       this.techlist();
     },
     chongzhi() {
       this.form.fushen = null;
       this.form.http = null;
       this.form.zhongshen = null;
-      this.form.dateValue_find = null;
-      this.whiteSearchList.startCreateTime = null;
-      this.whiteSearchList.endCreateTime = null;
+      this.form.dateValue_find = [
+          dayjs().month(3).format("YYYY-MM-DD") ,dayjs(new Date()).format("YYYY-MM-DD")
+        ];
+      this.whiteSearchList.startCreateTime = dayjs().month(3).format("YYYY-MM-DD");
+      this.whiteSearchList.endCreateTime = dayjs(new Date()).format("YYYY-MM-DD");
       this.mypageable.pageNum = 1;
       this.mypageable.pageSize = 10;
-      this.form.chushen = null;
+      this.form.shezhaType = null;
+      this.form.name = null
       this.form.url = null;
-      this.form.name = "";
       this.techlist();
     },
     //精确导出
@@ -429,38 +423,72 @@ export default {
       this.loadingbuttext = "...加载中";
       this.loadingbut = true;
       let list = {
-        myPage: {
-          pageNum: this.mypageable.pageNum,
-          pageSize: this.mypageable.pageSize,
-        },
-        createTimeStart: this.whiteSearchList.startCreateTime,
-        createTimeEnd: this.whiteSearchList.endCreateTime,
-        fraudType: this.form.chushen,
-        belong: this.form.fushen,
-        yjcHttpType: this.form.http,
-      };
 
-      const { data: res } = await this.$http.post(
-        "/treatment/batchDownLoad",
-        list
-      );
-      if (res.code == 200) {
+          // pageNum: this.mypageable.pageNum,
+          // pageSize: this.mypageable.pageSize,
+          source: this.form.name,
+        start: this.whiteSearchList.startCreateTime,
+        end: this.whiteSearchList.endCreateTime,
+        fraudType: this.form.shezhaType,
+        yjcType: this.form.http,
+        url: this.form.url,
+      };
+      // if (res) {
+      //   this.loadingbuttext = "导出";
+      //   this.loadingbut = false;
+      //   // // console.log(res.data);
+      //   // let newurl = res.data.url;
+      //   // let eleLink = document.createElement("a");
+      //   // eleLink.download = name;
+      //   // // const down = window.location.origin
+      //   // // eleLink.href = "http://172.31.1.61:8080" + newurl;
+      //   // // const down = window.location.origin
+      //   // eleLink.href = newurl;
+      //   // // console.log(eleLink);
+      //   let binaryData = [];
+      //   binaryData.push(res.data);
+      //   var _url=window.URL.createObjectURL(new Blob(binaryData, {type: "application/vnd.ms-excel"}))
+      //   const a = document.createElement("a");
+      //   a.download = name;
+      //   a.href = _url
+      //   a.click()
+      //   a.remove()
+      //   this.$message('导出成功');
+      // } else {
+      //   this.$message('导出失败');
+      // }
+      if(this.tableData.length==0){
+        this.$message("当前数据为空，无法导出！")
+        this.loadingbuttext = "导出";
+        this.loadingbut = false;
+        return false
+      }
+      const res = await this.$http({
+        methods:'get',
+        url:"/treat/exportTreat",
+        responseType: "blob",
+        params:list
+      })
+      if (res) {
         this.loadingbuttext = "导出";
         this.loadingbut = false;
         // console.log(res.data);
-        let newurl = res.data.url;
-        let eleLink = document.createElement("a");
-        eleLink.download = name;
-        // const down = window.location.origin
-        // eleLink.href = "http://172.31.1.61:8080" + newurl;
-        // const down = window.location.origin
-        eleLink.href = newurl;
-        // console.log(eleLink);
-        eleLink.click();
-        eleLink.remove();
-        this.$message(res.message);
+           let binaryData = [];
+        binaryData.push(res.data);
+        var _url=window.URL.createObjectURL(new Blob(binaryData, {type: "application/vnd.ms-excel"}))
+        const a = document.createElement("a");
+        // a.download = dayjs(new Date()).format("YYYYMMDD")+'-处置库.xlsx';
+  
+        a.href = _url
+        a.setAttribute('download', decodeURI(res.headers['content-disposition'].split('=')[1]));
+        document.body.appendChild(a);
+        
+        a.click()
+        // window.open(_url);
+        a.remove()
+        this.$message('导出成功');
       } else {
-        this.$message(res.message);
+        this.$message('导出失败');
       }
     },
     uploadwj() {
@@ -506,7 +534,7 @@ export default {
     },
     chushen_clearFun(val) {
       if (val == "") {
-        this.form.chushen = null;
+        this.form.shezhaType = null;
       }
     },
     fushen_clearFun(val) {
@@ -563,8 +591,8 @@ export default {
 
 <style scoped lang='less'>
 .right_main_under {
-  margin: 20px 0 0 20px;
-  box-sizing: border-box;
+  // margin: 20px 0 0 20px;
+  // box-sizing: border-box;
 }
 .el-row {
   margin-bottom: 20px;

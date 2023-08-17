@@ -2,7 +2,7 @@
   <div class="right_main_under">
     <div class="toptitle">
       <el-form size="mini" class="form" :inline="true">
-        <el-form-item>
+        <el-form-item prop="date">
           <!-- //复审模块--时间 -->
           <el-date-picker
             v-model="newdomainSimpleVo.dateValue_find"
@@ -13,17 +13,39 @@
           >
           </el-date-picker>
         </el-form-item>
-        <el-form-item  >
+        <el-form-item prop="address">
           <el-select
           class="timerq"
-            v-model="newdomainSimpleVo.guishud"
-            placeholder="归属地"
-            @clear="fushen_clearFun(newdomainSimpleVo.guishud)"
+            v-model="selectedGuishudi"
+            placeholder="城市"
+            @clear="fushen_clearFun(selectedGuishudi)"
+            @visible-change = 'visibleSelect'
+            :loading = "selectLoading"
           >
             <el-option
               v-for="(item, index) in selectData.fushen"
-              :label="item.mapName"
-              :value="item.sources"
+              :label="item.name"
+              :value="item.id"
+              :key="index"
+            >
+            <span style="float:left">{{ item.name }}</span>
+            <span style="float:right; color: #8492a6; font-size: 13px">{{ item.cnt }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+        <el-select
+           class="timerq"
+           collapse-tags
+            v-model="newdomainSimpleVo.shezhaType"
+            multiple
+            placeholder="涉诈类型"        
+            @clear="fushen_clearFun(newdomainSimpleVo.shezhaType)"
+          >
+            <el-option
+              v-for="(item, index) in selectData.shezha"
+              :label="item.name"
+              :value="item.id"
               :key="index"
             >
             </el-option>
@@ -49,57 +71,16 @@
     <!-- //复审模块——日期列表 -->
     <div class="bottomlist">
       <div class="datalist">
-        <!-- <div v-if="listloading" class="leftlist">
-          <el-table
-            border
-            ref="multipleTable"
-            :data="tableData"
-            style="width: 100%"
-            max-height="650px"
-            size="mini"
-            class="tableStyle1"
-            empty-text="暂无数据"
-          >
-            <el-table-column prop="ID" label="序号" type="index" min-width="5%">
-              <template slot-scope="scope"
-                ><span v-text="getIndex(scope.$index)"></span
-              ></template>
-            </el-table-column>
-            <el-table-column prop="date" label="日期" min-width="75%">
-            </el-table-column>
-            <el-table-column label="操作" min-width="20%">
-              <template slot-scope="scope">
-                <el-button
-                  size="mini"
-                  type="text"
-                  @click="search(scope.row.date)"
-                  >详情</el-button
-                >
-              </template>
-            </el-table-column>
-          </el-table>
-          <div class="bottom">
-            <el-pagination
-              @current-change="handleCurrentChange"
-              :current-page="mypageable.pageNum"
-              :page-size="mypageable.pageSize"
-              layout="total, prev, pager, next, jumper"
-              :total="total"
-              class="pagePagination pageRight"
-              small
-            >
-            </el-pagination>
-          </div>
-        </div> -->
         <!-- 复审模块——详情url列表 -->
         <el-tabs
           v-model="activeName"
-          @tab-click="handleClick"
+          v-loading = "loading"
           v-if="listloadingurl"
         >
+        <!-- @tab-click="handleClick" -->
           <el-tab-pane label="待审核" name="0">
-            <!--待审列表 -- 一页数据-->
-            <div class="leftlist">
+            <div style="max-height: 65vh;max-width: 100%;overflow-y: auto;">
+              <div class="leftlist">
               <!-- 每个块 -->
               <div
                 class="listurl"
@@ -149,7 +130,7 @@
                       <div class="grid-content bg-purple-dark">
                         <el-form-item label="初审时间：" class="inner">
                           <el-input
-                            :value="time(item.startCheck1Time)"
+                            :value="time(item.firstAuditTime)"
                             disabled
                           ></el-input>
                         </el-form-item>
@@ -159,7 +140,7 @@
                       ><div class="grid-content bg-purple-light">
                         <el-form-item label="初审结果：" class="inner">
                           <el-input
-                            :value="status(item.startCheck1Result)"
+                            :value="status(item.firstAuditResult)"
                             disabled
                           ></el-input>
                         </el-form-item></div
@@ -169,8 +150,8 @@
                 <!--复审模块- 图片 -->
                 <div class="images">
                   <el-image
-                    :src="item.phonePicture"
-                    :preview-src-list="item.picArray"
+                    :src="item.littleRemoteFile"
+                    :preview-src-list="[item.remoteFile]"
                     class="img1"
                     title="移动端"
                   >
@@ -206,6 +187,9 @@
                 </div>
               </div>
             </div>
+            </div>
+            <!--待审列表 -- 一页数据-->
+            
             <!-- 页码 -->
             <div class="bottom1">
               <el-pagination
@@ -225,46 +209,12 @@
               <el-button @click="submit">提交</el-button>
             </div>
             <!-- 当前位置 -->
-            <!-- <div class="location">
-              <span
-                class="guishudi"
-                v-if="guishudiLoading"
-                :title="this.gushudi"
-                @click="qiehuanguishudi"
-              >
-                归属地:{{ this.gushudi }}
-              </span>
-              <span class="wenzi" v-if="wenzi123">
-                当前日期 <span class="te">{{ this.mapName }}</span
-                >待处置量为：<span class="te">{{ this.nums }}</span
-                >条
-              </span>
-            </div> -->
+ 
           </el-tab-pane>
         </el-tabs>
       </div>
     </div>
     <!-- 选择归属地 -->
-    <!-- <el-dialog
-      title="选择归属地"
-      :visible.sync="dialogVisible"
-      width="30%"
-      :before-close="handleClose"
-      :showClose="false"
-    >
-      <el-radio-group v-model="radio123">
-        <el-radio
-          v-for="(item, index) in this.shushoudione"
-          :label="item.sources"
-          :value="item.mapName"
-          :key="index"
-          >{{ item.mapName }}</el-radio
-        >
-      </el-radio-group>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" plain @click="errer1">确 定</el-button>
-      </span>
-    </el-dialog> -->
     <!-- //提交前提示 -->
     <el-dialog
       title="提示"
@@ -299,9 +249,12 @@ export default {
   data() {
     return {
       disab:false,
+      loading:false,
       selectData: {
         fushen: [],
+        shezha:[]
       },
+      selectedGuishudi:null,
       disabledTooltip: true,
       tableDatalist: [],
       gushudi: "",
@@ -316,7 +269,8 @@ export default {
       activeName: "0",
       newdomainSimpleVo: {
         dateValue_find: dayjs(new Date()).format("YYYY-MM-DD"), //时间
-        guishud: 8,
+        guishud: null,
+        shezhaType: []
       },
       whiteSearchList: {
         startCreateTime: "",
@@ -324,13 +278,13 @@ export default {
       },
       mypageable: {
         pageNum: 1,
-        pageSize: 10,
+        pageSize: 20,
       },
       total: 0,
       totalPages: "",
       mypageableurl: {
         pageNumurl: 1,
-        pageSizeurl: 10,
+        pageSizeurl: 20,
       },
       totalurl: 0,
       totalPagesurl: "",
@@ -388,6 +342,16 @@ export default {
         { radioArray7: "" },
         { radioArray8: "" },
         { radioArray9: "" },
+        { radioArray10: "" },
+        { radioArray11: "" },
+        { radioArray12: "" },
+        { radioArray13: "" },
+        { radioArray14: "" },
+        { radioArray15: "" },
+        { radioArray16: "" },
+        { radioArray17: "" },
+        { radioArray18: "" },
+        { radioArray19: "" },
       ],
       newsformradio: [], //新数组
       dialogtijiao: false, //提示弹窗
@@ -408,15 +372,64 @@ export default {
           id: 3,
         },
       ],
+      tempGuishudi:null,
+      selectLoading:false
     };
   },
   created() {
     // this.listtime();
     this.suoshudi();
-    this.xq()
+    // this.xq()
   },
   methods: {
-
+    async visibleSelect(){     
+          this.selectLoading = true
+          this.$nextTick(async()=>{
+            const list = {
+              discoverDate:dayjs(this.newdomainSimpleVo.dateValue_find).format("YYYY-MM-DD"),
+              stage:'second'
+            } 
+            const {data:res} = await this.$http.get("/dictionary/second/datasourceTaskCnt",{params:list});
+            if(res.code == 200){
+              if(!res.data.length){
+                this.selectData.fushen.map((item)=>{
+                  item.cnt = 0
+                })
+              }
+              for(let i=0;i<this.selectData.fushen.length;i++){
+                  for(let j=0;j<res.data.length;j++){
+                    if(this.selectData.fushen[i].id == res.data[j].id){
+                      this.selectData.fushen[i].cnt = res.data[j].cnt
+                      // console.log(this.selectData.fushen[i].id,'走到map更新cnt',this.selectData.fushen[i].cnt);  
+                      break
+                    }else{
+                      this.selectData.fushen[i].cnt = 0
+                      // console.log(this.selectData.fushen[i].id,'走到map更新cnt 0');  
+                    }
+                  }
+                }
+              // console.log(this.selectData.fushen);
+              // res.data.forEach((item)=>{
+              //   // console.log(item);
+              //   this.selectData.fushen.map((item2)=>{
+              //     // console.log(item2.id);
+              //     if(item2.id==item.id){               
+              //       item2.cnt = item.cnt
+              //     }else{
+              //       item2.cnt = 0
+              //     }
+              //   })
+              // })
+             this.$forceUpdate()
+             this.selectLoading = false
+            }else{
+              this.$message(res.message)
+              this.selectLoading = false
+            }
+          })
+          
+        
+    },
     //鼠标移上去时显示input的所有内容
     showTooltip() {
       this.disabledTooltip = false; //false：不管url的长度都显示
@@ -466,7 +479,7 @@ export default {
         this.mapName = res.data.mapName;
       }
     },
-    //初始化时间
+    //初始化时间  : 新版本未用
     async listtime() {
       let list = {
         around: "",
@@ -475,7 +488,7 @@ export default {
         features: 0,
         fraudType: "",
         myPage: {
-          pageNum: this.mypageable.pageNum,
+          pageNum: this.mypageableurl.pageNumurl,
           pageSize: this.mypageable.pageSize,
         },
         ranking: "",
@@ -507,14 +520,17 @@ export default {
     },
     //提交
     submit() {
-     
+     if(this.tableDatalist.length === 0){
+      this.$message("提交错误，无数据！")
+      return false
+     }
       for (var i = 0; i < this.formradio.length; i++) {
        
         this.newtableDatalist = this.tableDatalist.map((items, index) => {
           return {
-            id: this.newnum[index],
-            url: items.url,
-            againCheckResult: this.formradio[index],
+            auditResult: this.chooseType(this.formradio[index]) ,
+            id: items.id,
+            did: items.did
           };
         });
       }
@@ -524,11 +540,11 @@ export default {
       let n = 0;
       let ny = 0;
       for (var j = 0; j < this.newtableDatalist.length; j++) {
-        if (this.newtableDatalist[j].againCheckResult == 1) {
+        if (this.newtableDatalist[j].auditResult == "YES") {
           y++;
-        } else if (this.newtableDatalist[j].againCheckResult == 2) {
+        } else if (this.newtableDatalist[j].auditResult == "NO") {
           n++;
-        } else if (this.newtableDatalist[j].againCheckResult == 3) {
+        } else if (this.newtableDatalist[j].auditResult == "NOT_SURE") {
           ny++;
         }
       }
@@ -538,18 +554,53 @@ export default {
       this.dialogtijiao = true;
     },
     async suoshudi() {
-      const { data: res } = await this.$http.get("/check/sourcesGroup");
-      if (res.code == 200) {
-        this.selectData.fushen = res.data;
-        // console.log(this.selectData.fushen);
+      // const { data: res } = await this.$http.get("/dictionary/datasource");
+      // if (res.code == 200) {
+      //   const downList = res.data
+      //   this.selectData.fushen = downList
+      //   for(let i in downList){
+      //     if(downList[i].name==="上海"){
+      //       this.selectedGuishudi = downList[i]
+      //       break
+      //     }else{
+      //       this.selectedGuishudi = null
+      //     }
+      //   }
+      //   // console.log(this.selectData.fushen);
+      // }
+      this.loading = true
+      const promise1 =  this.$http.get("/dictionary/datasource");
+      const promise2 =  this.$http.get("/dictionary/fraudType",{params:{isBig:true}})
+      const [data1,data2] = await Promise.all([promise1,promise2])
+      if(data1.data.code === 200 && data2.data.code === 200){
+        this.selectData.fushen = data1.data.data
+        this.selectData.shezha = data2.data.data
+        for(let i in data1.data.data){
+          if(data1.data.data[i].name==="上海"){
+            this.selectedGuishudi = data1.data.data[i].id
+            this.tempGuishudi = data1.data.data[i].id
+            break
+          }else{
+            if(data1.data.data[0]){
+              this.selectedGuishudi = data1.data.data[0].id
+              this.tempGuishudi = data1.data.data[0].id
+            }
+            
+          }
+        }
+        // if(data2.data.data.length !== 0){
+        //   this.newdomainSimpleVo.shezhaType = data2.data.data[0]
+        // }
+        
       }
+      this.xq()
     },
     // 弹窗确定
     determine() {
       let flag = true;
       for (var j = 0; j < this.newtableDatalist.length; j++) {
         // 判断当前是否有未选择项
-        if (typeof this.newtableDatalist[j].againCheckResult == "object") {
+        if (this.newtableDatalist[j].auditResult == undefined) {
           flag = false;
           this.$message("有未勾选项");
           break;
@@ -563,9 +614,9 @@ export default {
     },
     //弹窗页面的提交接口
     async checkresult() {
-      let list = this.newtableDatalist;
+      let list = {auditList:this.newtableDatalist};
       const { data: res } = await this.$http.post(
-        "/recheck/updateReCheckResult",
+        "/audit/second/audit",
         list
       );
       if (res.code == 200) {
@@ -579,6 +630,9 @@ export default {
           // 小数多加一页
           totalPage = parseInt(totalPage) + 1;
         }
+        if(this.mypageableurl.pageNumurl == totalPage){
+          --this.mypageableurl.pageNumurl
+        }
         this.formradio = [
           // 先置空所有按钮
           { radioArray0: "" },
@@ -591,6 +645,16 @@ export default {
           { radioArray7: "" },
           { radioArray8: "" },
           { radioArray9: "" },
+          { radioArray10: "" },
+        { radioArray11: "" },
+        { radioArray12: "" },
+        { radioArray13: "" },
+        { radioArray14: "" },
+        { radioArray15: "" },
+        { radioArray16: "" },
+        { radioArray17: "" },
+        { radioArray18: "" },
+        { radioArray19: "" },
         ];
                 this.disab=false
         this.xq(); //再请求下一页数据
@@ -604,21 +668,24 @@ export default {
     //日期查询
     chaxun() {
       // this.listtime();
+      this.mypageableurl.pageNumurl = 1;
          this.xq();
     },
     //重置
     chongzhi() {
-      this.mypageable.pageNum = 1;
+      this.selectedGuishudi = this.tempGuishudi
+      this.mypageableurl.pageNumurl = 1;
+      this.newdomainSimpleVo.shezhaType = null
       // this.newdomainSimpleVo.dateValue_find = null;
       // this.whiteSearchList.endCreateTime = null;
       // this.whiteSearchList.startCreateTime = null;
       // this.listtime();
-            this.newdomainSimpleVo.guishud=8
+            // this.selectedGuishudi=8
       this.newdomainSimpleVo.dateValue_find = dayjs(new Date()).format(
         "YYYY-MM-DD"
       );
-      // this.newdomainSimpleVo.guishud = null;
-      this.xq();
+      // this.selectedGuishudi = null;
+      this.suoshudi();
     },
     handleClick(tab, event) {
       // console.log('待审核');
@@ -638,7 +705,7 @@ export default {
       //$index为数据下标,对英序号要加一
       // console.log($index);
       return (
-        (this.mypageable.pageNum - 1) * this.mypageable.pageSize + $index + 1
+        (this.mypageableurl.pageNumurl - 1) * this.mypageable.pageSize + $index + 1
       );
     },
     //自动请求待审核列表
@@ -655,34 +722,49 @@ export default {
     async xq() {
       this.num = [];
       this.newnum = [];
+      let bigFraudTypesStr
+      if(this.newdomainSimpleVo.shezhaType){
+        bigFraudTypesStr = this.newdomainSimpleVo.shezhaType.join(',')
+        if(bigFraudTypesStr.length==0){
+          bigFraudTypesStr = []
+        }
+      }
+      if(this.newdomainSimpleVo.dateValue_find==null){
+        this.$message.error('请选择时间！')
+        return false
+      }
+      this.loading = true
       let list = {
-        checkStatus: 0, //请求未审核的数据
-       checkTime: dayjs(this.newdomainSimpleVo.dateValue_find).format(
+       
+       day: dayjs(this.newdomainSimpleVo.dateValue_find).format(
           "YYYY-MM-DD"
         ),
-        sources: this.newdomainSimpleVo.guishud,
-        myPage: {
-          pageNum: this.mypageableurl.pageNumurl,
-          pageSize: this.mypageableurl.pageSizeurl,
-        },
+        source: this.selectedGuishudi,
+        bigFraudTypes: bigFraudTypesStr,
+        page: this.mypageableurl.pageNumurl,
+        pageSize:this.mypageableurl.pageSizeurl
       };
       // console.log(list);
-      const { data: res } = await this.$http.post(
-        "/recheck/queryUrlListByDate",
-        list
+      const { data: res } = await this.$http.get(
+        "/audit/second/list",
+        {params:list}
       );
       if (res.code == 200) {
         // console.log(res.data);
-        for (var i = 0; i < res.data.list.length; i++) {
-          // console.log(res.data.list[i]);
-          this.num.push(res.data.list[i].id);
-        }
-        this.newnum = this.num;
-        // console.log(this.newnum);
-        this.totalurl = res.data.total;
-        this.chakanxiangq(this.newnum);
+        this.tableDatalist = res.dataList
+        this.totalurl = res.totalSum
+        // for (var i = 0; i < res.data.list.length; i++) {
+        //   // console.log(res.data.list[i]);
+        //   this.num.push(res.data.list[i].id);
+        // }
+        // this.newnum = this.num;
+        // // console.log(this.newnum);
+        // this.totalurl = res.data.total;
+        // this.chakanxiangq(this.newnum);
+        this.loading = false
       } else if (res.code == 500) {
         this.$message(res.message);
+        this.loading = false
         // this.fanhui();
       }
     },
@@ -708,11 +790,11 @@ export default {
       return dayjs(val).format("YYYY-MM-DD  HH:mm:ss");
     },
     status(val) {
-      if (val == "1") {
+      if (val == "YES") {
         return "是";
-      } else if (val == "2") {
+      } else if (val == "NO") {
         return "否";
-      } else if (val == "3") {
+      } else if (val == "NOT_SURE") {
         return "不确定";
       }
     },
@@ -734,17 +816,28 @@ export default {
         { radioArray7: "" },
         { radioArray8: "" },
         { radioArray9: "" },
+        { radioArray10: "" },
+        { radioArray11: "" },
+        { radioArray12: "" },
+        { radioArray13: "" },
+        { radioArray14: "" },
+        { radioArray15: "" },
+        { radioArray16: "" },
+        { radioArray17: "" },
+        { radioArray18: "" },
+        { radioArray19: "" },
       ];
       this.tableDatalist = [];
       this.totalurl = 0;
+      this.mypageableurl.pageNumurl = 1
       //     this.newdomainSimpleVo.dateValue_find = dayjs(new Date()).format(
       //   "YYYY-MM-DD"
       // );
-      // this.newdomainSimpleVo.guishud = 8;
+      // this.selectedGuishudi = 8;
       this.xq();
     },
     handleCurrentChange(val) {
-      this.mypageable.pageNum = val;
+      this.mypageableurl.pageNumurl = val;
       this.listtime();
     },
     handleCurrentChangeurl(val) {
@@ -762,8 +855,27 @@ export default {
         { radioArray7: "" },
         { radioArray8: "" },
         { radioArray9: "" },
+        { radioArray10: "" },
+        { radioArray11: "" },
+        { radioArray12: "" },
+        { radioArray13: "" },
+        { radioArray14: "" },
+        { radioArray15: "" },
+        { radioArray16: "" },
+        { radioArray17: "" },
+        { radioArray18: "" },
+        { radioArray19: "" },
       ];
       this.xq();
+    },
+    chooseType(val){
+      if(val==1){
+        return "YES"
+      }else if(val==2){
+        return "NO"
+      }else if(val==3){
+        return "NOT_SURE"
+      }
     },
     type(val) {
       if (val == "dk") {
@@ -784,7 +896,7 @@ export default {
     },
     fushen_clearFun(val) {
       if (val == "") {
-        this.newdomainSimpleVo.guishud = null;
+        this.selectedGuishudi = null;
       }
     },
   },

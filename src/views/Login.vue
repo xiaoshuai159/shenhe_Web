@@ -40,7 +40,7 @@
         </el-form-item>
         <div class="login-btn">
           <!---->
-          <el-button type="primary"  @click="submitForm('param')"   
+          <el-button type="primary"  @click="submitForm('param')" :loading="loading"
             >登录</el-button
           >
         </div>
@@ -51,9 +51,11 @@
 </template>
 
 <script>
+import {v4 as uuidv4} from 'uuid'
 export default {
   data() {
     return {
+      loading:false,
       newarr: [],
       param: {
         username: "",
@@ -74,14 +76,16 @@ export default {
     submitForm(param) {
       // submit(param) {
         // console.log(1);
+        this.loading = true
+        const token = uuidv4()
       this.$refs[param].validate(async (valid) => {
         if (valid) {
           try {
             const formData = new FormData();
             formData.append("username", this.param.username);
             formData.append("password", this.param.password);
-            const res = await this.$http.post("/login", formData);
-
+            const res = await this.$http.post("/user/login", formData);
+            // const res = await this.$http.get("/covid");
             if (res.data.code == 200) {
               this.$message("登录成功");
               window.sessionStorage.setItem(
@@ -92,18 +96,25 @@ export default {
                 "pwd",
                 JSON.stringify(this.param.password)
               );
+              window.sessionStorage.setItem(
+                "token",
+                JSON.stringify(token)
+              );
               // window.sessionStorage.setItem("isLogin", "true");
 
-              
+              this.loading = false
               this.$router.push("/welcome");
             } else {
               this.$message("账号或密码错误！");
+              this.loading = false
             }
           } catch (e) {
             this.$message.error(e);
+            this.loading = false
           }
         } else {
           this.$message.error("请输入账号和密码");
+          this.loading = false
           return false;
         }
       });

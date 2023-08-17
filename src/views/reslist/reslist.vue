@@ -194,16 +194,7 @@
           ><div class="grid-content bg-purple">
             <!-- 审核结果头部模块——button -->
     
-            <!-- 导出 -->
-            <!-- <el-button
-            class="daochu_weiyi"
-              size="mini"
-              type="info"
-              plain
-              @click.native.stop="put"
-              :loading="loadingbut"
-              >{{ loadingbuttext }}</el-button
-            > -->
+            
             <!-- 一键导出 -->
             <button type="button" class="blue" @click="quanbudaochu">
               {{ loadingbuttextyijian }}
@@ -254,15 +245,16 @@
       size="mini"
       class="tableStyle"
       empty-text="暂无数据"
+      v-loading = "loading"
     >
-      <el-table-column prop="ID" label="序号" type="index">
+      <el-table-column prop="id" label="序号" type="index">
         <template slot-scope="scope"
           ><span v-text="getIndex(scope.$index)"></span
         ></template>
       </el-table-column>
       <el-table-column prop="url" label="URL" show-overflow-tooltip>
       </el-table-column>
-      <el-table-column prop="urlTitle" label="域名标题" show-overflow-tooltip>
+      <el-table-column prop="title" label="域名标题" show-overflow-tooltip>
       </el-table-column>
 
       <el-table-column prop="reason" label="原因"> </el-table-column>
@@ -273,63 +265,67 @@
         show-overflow-tooltip
       >
       </el-table-column>
-      <el-table-column prop="ipAround" label="IP" show-overflow-tooltip>
+      <el-table-column prop="ip" label="IP" show-overflow-tooltip>
       </el-table-column>
       <el-table-column prop="fraudType" label="类型"> </el-table-column>
 
       <!-- <el-table-column prop="url6" label="境内外"> </el-table-column> -->
-      <el-table-column prop="ranking" label="排名"> </el-table-column>
+      <el-table-column prop="rank" label="排名">
+        <template slot-scope="scope">
+          {{ scope.row.rank == -1 ? '无排名' : scope.row.rank }}
+        </template>
+      </el-table-column>
       <el-table-column prop="visits" label="访问量"> </el-table-column>
       <el-table-column prop="features" label="特征"> </el-table-column>
-      <el-table-column prop="sources" label="来源"> </el-table-column>
+      <el-table-column prop="source" label="来源"> </el-table-column>
       <!-- <el-table-column prop="url10" label="截图"> </el-table-column> -->
-      <el-table-column prop="checkResult1" label="初审结果">
+      <el-table-column prop="firstAuditResult" label="初审结果">
         <template slot-scope="scope">
-          <span v-if="scope.row.checkResult1 == '1'">
+          <span v-if="scope.row.firstAuditResult == 'YES'">
             <!-- <i class="el-icon-success dx green"></i> -->
             <i class="el-icon-success green"></i>
           </span>
-          <span v-if="scope.row.checkResult1 == '2'">
+          <span v-if="scope.row.firstAuditResult == 'NO'">
             <!-- <i class="el-icon-error dx red"></i> -->
             <i class="el-icon-error red"></i>
           </span>
-          <span v-if="scope.row.checkResult1 == '3'">
+          <span v-if="scope.row.firstAuditResult == 'NOT_SURE'">
             <!-- <i class="el-icon-error dx red"></i> -->
             <i class="el-icon-remove gy"></i>
           </span>
         </template>
       </el-table-column>
-      <el-table-column prop="checkResult2" label="复审结果">
+      <el-table-column prop="secondAuditResult" label="复审结果">
         <template slot-scope="scope">
-          <span v-if="scope.row.checkResult2 == '1'">
+          <span v-if="scope.row.secondAuditResult == 'YES'">
             <!-- <i class="el-icon-success dx green"></i> -->
             <i class="el-icon-success green"></i>
           </span>
-          <span v-if="scope.row.checkResult2 == '2'">
+          <span v-if="scope.row.secondAuditResult == 'NO'">
             <!-- <i class="el-icon-error dx red"></i> -->
             <i class="el-icon-error red"></i>
           </span>
-          <span v-if="scope.row.checkResult2 == '3'">
+          <span v-if="scope.row.secondAuditResult == 'NOT_SURE'">
             <!-- <i class="el-icon-error dx red"></i> -->
             <i class="el-icon-remove gy"></i>
           </span>
-          <span v-if="scope.row.checkResult2 == null">
+          <span v-if="scope.row.secondAuditResult == null">
             <!-- <i class="el-icon-error dx red"></i> -->
             <i></i>
           </span>
         </template>
       </el-table-column>
-      <el-table-column prop="checkResult3" label="终审结果">
+      <el-table-column prop="thirdAuditResult" label="终审结果">
         <template slot-scope="scope">
-          <span v-if="scope.row.checkResult3 == '1'">
+          <span v-if="scope.row.thirdAuditResult == 'YES'">
             <!-- <i class="el-icon-success dx green"></i> -->
             <i class="el-icon-success green"></i>
           </span>
-          <span v-if="scope.row.checkResult3 == '2'">
+          <span v-if="scope.row.thirdAuditResult == 'NO'">
             <!-- <i class="el-icon-error dx red"></i> -->
             <i class="el-icon-error red"></i>
           </span>
-          <span v-if="scope.row.checkResult3 == '3'">
+          <span v-if="scope.row.thirdAuditResult == 'NOT_SURE'">
             <!-- <i class="el-icon-error dx red"></i> -->
             <i class="el-icon-remove gy"></i>
           </span>
@@ -362,6 +358,7 @@ export default {
   data() {
     return {
       dialog: false,
+      loading:false,
       direction: "rtl",
       formtime: null,
       whiteSearchListdaochu: {
@@ -470,29 +467,28 @@ export default {
     };
   },
   created() {
-    this.type();
-    this.laiyuanselect();
+    // this.type();
+    // this.laiyuanselect();
     this.reslist();
   },
 
   methods: {
+    // 查询异步请求
     async reslist() {
       let list = {
-        checkResult3: this.form.zhongshen,
-        endCheckTime: this.whiteSearchList.endCreateTime,
-        fraudType: this.form.type,
-        myPage: {
-          pageNum: this.mypageable.pageNum,
+          page: this.mypageable.pageNum,
           pageSize: this.mypageable.pageSize,
-        },
-        sources: this.form.laiyuan,
-        startCheckTime: this.whiteSearchList.startCreateTime,
       };
-      const { data: res } = await this.$http.post("/end/examineList", list);
+      this.loading = true
+      const { data: res } = await this.$http.get("/treat/auditResult", {params:list});
       if (res.code == 200) {
         // console.log(res.data);
-        this.tableData = res.data.list;
-        this.total = res.data.total;
+        this.tableData = res.dataList;
+        this.total = res.totalSum;
+        this.loading = false
+      }else{
+        this.$message(res.message)
+        this.loading = false
       }
     },
     //查询
@@ -500,7 +496,7 @@ export default {
     //   this.reslist();
     // },
 
-    //重置
+    //重置:干掉了
     chongzhi() {
       this.form.datetime = null;
       this.form.zhongshen = null;
@@ -586,12 +582,14 @@ export default {
         // console.log(res.data);
         let newurl = res.data.url;
         let eleLink = document.createElement("a");
-        eleLink.download = name;
+        console.log(res.headers["content-disposition"]);
+        eleLink.download = res.headers["content-disposition"];
         // const down = window.location.origin
         // eleLink.href = "http://172.31.1.61:8080" + newurl;
         // const down = window.location.origin
         eleLink.href = newurl;
         // console.log(eleLink);
+        
         eleLink.click();
         eleLink.remove();
         this.$message(res.message);
@@ -612,49 +610,85 @@ export default {
             cancelButtonText: '取消',
             type: 'warning'
           }).then(() => {
-           this.putyijian123()
-          }).catch(() => {
-            //几点取消的提示
+          // this.$message({
+          //   type: 'success',
+          //   message: '删除成功!'
+          // });
+          this.putyijian123()
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
           });
+        });
+           
+  
     },
     async putyijian123() {
-      const { data: res } = await this.$http.get("/end/cleanExportOriginTable");
+      const { data: res } = await this.$http.post("/treat/clear");
       if (res.code == 200) {
         // console.log(res.data);
-        this.$message(res.message);
+        this.$message(res);
         this.reslist()
+      }else{
+        this.$message(res.message);
       }
     },
  
     async quanbudaochu() {
       this.loadingbuttextyijian = "...加载中";
       // this.loadingbutyijian = true;
-      let list = {
-        startCheckTime: this.whiteSearchListdaochu.startCreateTimedaochu,
-        endCheckTime: this.whiteSearchListdaochu.endCreateTimedaochu,
-      };
-      const { data: res } = await this.$http.post(
-        "/end/exportFinalJudgment",list
-      );
-      if (res.code == 200) {
+      // let list = {
+      //   startCheckTime: this.whiteSearchListdaochu.startCreateTimedaochu,
+      //   endCheckTime: this.whiteSearchListdaochu.endCreateTimedaochu,
+      // };
+      if(this.tableData.length==0){
+        this.$message("当前数据为空，无法导出！")
+        this.loadingbuttextyijian = "一键导出";
+        return false
+      }
+      const res = await this.$http({
+        methods:'get',
+        url:'/treat/exportResult',
+        responseType: "blob",
+      });
+      if (res) {
         this.loadingbuttextyijian = "一键导出";
         // this.loadingbutyijian = false;
         // this.dialog = false;
         // this.quc();
         // console.log(res.data);
-        let newurl1 = res.data.url;
-        let eleLink1 = document.createElement("a");
-        eleLink1.download = name;
-        // const down = window.location.origin
-        // eleLink.href = "http://172.31.1.61:8080" + newurl;
-        // const down = window.location.origin
-        eleLink1.href = newurl1;
-        // console.log(eleLink);
-        eleLink1.click();
-        eleLink1.remove();
-        this.$message(res.message);
+        // let newurl1 = res.data.url;
+        // // let newurl1 = res
+        // let eleLink1 = document.createElement("a");
+        // eleLink1.download = name;
+        // // const down = window.location.origin
+        // // eleLink.href = "http://172.31.1.61:8080" + newurl;
+        // // const down = window.location.origin
+        // eleLink1.href = newurl1;
+        // // console.log(eleLink);
+        // eleLink1.click();
+        // eleLink1.remove();
+        let binaryData = [];
+        // let temp = res.headers["content-disposition"]
+        // let filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+        // let matches = filenameRegex.exec(temp);
+        // if (matches != null && matches[1]) { 
+        //   var filename = matches[1].replace(/['"]/g, '');
+        // }
+        binaryData.push(res.data);
+        var _url=window.URL.createObjectURL(new Blob(binaryData, {type: "application/vnd.ms-excel"}))
+        const a = document.createElement("a");
+        
+        a.href = _url
+        a.setAttribute('download', decodeURI(res.headers['content-disposition'].split('=')[1]));
+        document.body.appendChild(a);
+        a.click()
+        a.remove()
+        this.$message("导出成功");
       } else {
-        this.$message(res.message);
+        this.$message(res);
+        this.loadingbuttextyijian = "导出失败";
       }
     },
     // async shiijiandaochu() {
