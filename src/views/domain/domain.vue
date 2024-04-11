@@ -174,12 +174,12 @@
           chuzhi: null,
           chengshi:null,
           datetime:[
-            dayjs().month(3).format("YYYY-MM-DD") ,dayjs(new Date()).format("YYYY-MM-DD")
+            dayjs().subtract(1, 'week').format("YYYY-MM-DD") ,dayjs(new Date()).format("YYYY-MM-DD")
           ],
           username: null,
         },
         whiteSearchList: {
-          startCreateTime:dayjs().month(3).format("YYYY-MM-DD") ,
+          startCreateTime:dayjs().subtract(1, 'week').format("YYYY-MM-DD") ,
           endCreateTime: dayjs(new Date()).format("YYYY-MM-DD")
         },
         tableData: [
@@ -292,10 +292,10 @@
         this.form.username = null;
         this.form.chengshi = null
         this.form.domain = null
-        this.whiteSearchList.startCreateTime = dayjs().month(3).format("YYYY-MM-DD");
+        this.whiteSearchList.startCreateTime = dayjs().subtract(1, 'week').format("YYYY-MM-DD");
         this.whiteSearchList.endCreateTime = dayjs(new Date()).format("YYYY-MM-DD");
         this.form.datetime=[
-            dayjs().month(3).format("YYYY-MM-DD") ,dayjs(new Date()).format("YYYY-MM-DD")
+            dayjs().subtract(1, 'week').format("YYYY-MM-DD") ,dayjs(new Date()).format("YYYY-MM-DD")
           ],
            this.form.username=JSON.parse(window.sessionStorage.getItem('one'))
         this.techlist();

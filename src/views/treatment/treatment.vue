@@ -248,7 +248,7 @@ export default {
       },
       shangchuan: false,
       whiteSearchList: {
-        startCreateTime:  dayjs().month(3).format("YYYY-MM-DD"),
+        startCreateTime:  dayjs().subtract(1, 'week').format("YYYY-MM-DD"),
         endCreateTime: dayjs(new Date()).format("YYYY-MM-DD"),
       },
       form: {
@@ -257,7 +257,7 @@ export default {
         fushen: null,
         zhongshen: null,
         dateValue_find:[
-          dayjs().month(3).format("YYYY-MM-DD") ,dayjs(new Date()).format("YYYY-MM-DD")
+          dayjs().subtract(1, 'week').format("YYYY-MM-DD") ,dayjs(new Date()).format("YYYY-MM-DD")
         ],
         http: null,
         url: null,
@@ -406,9 +406,9 @@ export default {
       this.form.http = null;
       this.form.zhongshen = null;
       this.form.dateValue_find = [
-          dayjs().month(3).format("YYYY-MM-DD") ,dayjs(new Date()).format("YYYY-MM-DD")
+          dayjs().subtract(1, 'week').format("YYYY-MM-DD") ,dayjs(new Date()).format("YYYY-MM-DD")
         ];
-      this.whiteSearchList.startCreateTime = dayjs().month(3).format("YYYY-MM-DD");
+      this.whiteSearchList.startCreateTime = dayjs().subtract(1, 'week').format("YYYY-MM-DD");
       this.whiteSearchList.endCreateTime = dayjs(new Date()).format("YYYY-MM-DD");
       this.mypageable.pageNum = 1;
       this.mypageable.pageSize = 10;

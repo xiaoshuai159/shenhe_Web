@@ -569,45 +569,7 @@
           multPushTypeSelect:[],
           multPushTypeOptions:[],
           multPushByteSelect:[],
-          multPushByteOptions:[{
-            value: 'id',
-            label: '域名ID'
-          }, {
-            value: 'url',
-            label: 'url'
-          }, {
-            value: 'ip',
-            label: '目标IP'
-          },{
-            value: 'feature',
-            label: '特征号'
-          },
-          {
-            value: 'bigFraudType',
-            label: '涉诈大类型'
-          },{
-            value: 'fraudType',
-            label: '涉诈小类型'
-          }, 
-          {
-            value: 'treatStatus',
-            label: '处置状态'
-          }, {
-            value: 'rejectReason',
-            label: '未被处置原因'
-          }, {
-            value: 'discoverDate',
-            label: '发现日期'
-          },{
-            value: 'visits',
-            label: '访问量'
-          }, {
-            value: 'treatDate',
-            label: '处置日期'
-          }, {
-            value: 'snapshot',
-            label: '截图名称'
-          }],
+          multPushByteOptions:[],
           pushImageSelect:'NO',
           pushImageOptions:[{
             value: 'YES',
@@ -671,45 +633,7 @@
           multPushTypeSelect:[],
           multPushTypeOptions:[],
           multPushByteSelect:[],
-          multPushByteOptions:[{
-            value: 'id',
-            label: '域名ID'
-          }, {
-            value: 'url',
-            label: 'url'
-          }, {
-            value: 'ip',
-            label: '目标IP'
-          },{
-            value: 'feature',
-            label: '特征号'
-          },
-          {
-            value: 'bigFraudType',
-            label: '涉诈大类型'
-          },{
-            value: 'fraudType',
-            label: '涉诈小类型'
-          }, 
-          {
-            value: 'treatStatus',
-            label: '处置状态'
-          }, {
-            value: 'rejectReason',
-            label: '未被处置原因'
-          }, {
-            value: 'discoverDate',
-            label: '发现日期'
-          }, {
-            value: 'visits',
-            label: '访问量'
-          }, {
-            value: 'treatDate',
-            label: '处置日期'
-          }, {
-            value: 'snapshot',
-            label: '截图名称'
-          }],
+          multPushByteOptions:[],
           pushImageSelect:'NO',
           pushImageOptions:[{
             value: 'YES',
@@ -830,15 +754,28 @@
         this.loading = true
         const promise1 = this.$http.get("/dictionary/datasource");
         const promise2 = this.$http.get("/dictionary/fraudType",{params:{isBig:true}})
-        const [sourceData,fraudData] = await Promise.all([promise1,promise2])
+        const promise3 = this.$http.get("/dictionary/pushFields")
+        const [sourceData,fraudData,fieldData] = await Promise.all([promise1,promise2,promise3])
         // console.log(sourceData.data.data); 
         // console.log(fraudData.data.data);
+        // console.log(fieldData.data.data)
+        let fieldDataArr = []
+        for (const key in fieldData.data.data) {
+          // console.log(key);
+          // console.log(fieldData.data.data[key]);
+          fieldDataArr.push({
+            value:key,
+            label:fieldData.data.data[key]
+          })
+        }
+        // console.log(fieldDataArr);
         if(sourceData.data.code === 200 && fraudData.data.code === 200){
           this.dialogFormData.multCityOptions = sourceData.data.data
           this.dialogFormData.multPushTypeOptions= fraudData.data.data
+          this.dialogFormData.multPushByteOptions= fieldDataArr
           this.dialogFormData2.multCityOptions = sourceData.data.data
           this.dialogFormData2.multPushTypeOptions= fraudData.data.data
-
+          this.dialogFormData2.multPushByteOptions= fieldDataArr
         }
         this.techlist()
     },

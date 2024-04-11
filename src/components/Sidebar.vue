@@ -1,5 +1,9 @@
 <template>
   <div class="sidebar" style="background-color: #545c64;">
+    <!-- 在每天下午4点显示弹窗 -->
+    <el-dialog title="提醒" :visible="showPopup" @close="closePopup">
+      <p>请您及时清空审核数据。</p>
+    </el-dialog>
     <el-menu
       router
       :default-active="$route.path"
@@ -20,11 +24,12 @@
 
 <script>
 import NavItem from "./NavItem";
-
+import dayjs from 'dayjs';
 export default {
   data() {
     return {
       // defaultUrl: "/reviewed",
+      showPopup: false,
       pid: [],
       Newname: [],
       Newname1: [],
@@ -180,11 +185,30 @@ export default {
     // let href = window.location.href;
     // this.defaultUrl = href.split("/#")[1];
     this.qx();
+    this.scheduleCheck();
   },
   watch: {
     $route: "getPath",
   },
   methods: {
+    async scheduleCheck() {
+      const { data: res } = await this.$http.get("/user/getInfo");
+      if(res.data.role === 'THIRD'){
+        console.log('true');
+        setInterval(() => {
+          const now = dayjs();
+          const isAfternoonFour = now.hour() === 16 && now.minute() === 0;
+
+          if (isAfternoonFour) {
+            this.showPopup = true;
+          }
+        }, 60000); // 每分钟检查一次
+      }
+      
+    },
+    closePopup() {
+      this.showPopup = false;
+    },
     getPath() {
       this.defaultUrl = this.$route.path;
     },
